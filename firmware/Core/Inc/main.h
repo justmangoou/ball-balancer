@@ -57,6 +57,26 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define TOUCH_X_POS_Pin GPIO_PIN_1
+#define TOUCH_X_POS_GPIO_Port GPIOA
+#define TOUCH_Y_POS_Pin GPIO_PIN_2
+#define TOUCH_Y_POS_GPIO_Port GPIOA
+#define TOUCH_X_NEG_Pin GPIO_PIN_3
+#define TOUCH_X_NEG_GPIO_Port GPIOA
+#define TOUCH_Y_NEG_Pin GPIO_PIN_4
+#define TOUCH_Y_NEG_GPIO_Port GPIOA
+#define C_DIR_Pin GPIO_PIN_0
+#define C_DIR_GPIO_Port GPIOB
+#define C_STEP_Pin GPIO_PIN_1
+#define C_STEP_GPIO_Port GPIOB
+#define B_DIR_Pin GPIO_PIN_2
+#define B_DIR_GPIO_Port GPIOB
+#define B_STEP_Pin GPIO_PIN_10
+#define B_STEP_GPIO_Port GPIOB
+#define A_DIR_Pin GPIO_PIN_12
+#define A_DIR_GPIO_Port GPIOB
+#define A_STEP_Pin GPIO_PIN_13
+#define A_STEP_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
