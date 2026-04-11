@@ -45,6 +45,8 @@ DMA_HandleTypeDef hdma_adc1;
 
 /* USER CODE BEGIN PV */
 ADC_ChannelConfTypeDef sConfig_read;
+volatile float x_pos = 0;
+volatile float y_pos = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,8 +103,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    static float x = 0, y = 0;
-    if (ResistiveTouch_Read(&x, &y))
+    if (ResistiveTouch_Read(&x_pos, &y_pos))
     {
 
     }
