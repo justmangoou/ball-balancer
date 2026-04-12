@@ -53,7 +53,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void DWT_Delay_us(uint32_t microseconds);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

@@ -44,7 +44,6 @@ ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
 /* USER CODE BEGIN PV */
-ADC_ChannelConfTypeDef sConfig_read;
 volatile float x_pos = 0;
 volatile float y_pos = 0;
 /* USER CODE END PV */
@@ -60,7 +59,19 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void DWT_Init(void) {
+  if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  }
+}
 
+void DWT_Delay_us(const volatile uint32_t microseconds) {
+  const uint32_t start_tick = DWT->CYCCNT;
+  const uint32_t delay_cycles = microseconds * (HAL_RCC_GetHCLKFreq() / 1000000);
+  while ((DWT->CYCCNT - start_tick) < delay_cycles);
+}
 /* USER CODE END 0 */
 
 /**
@@ -87,7 +98,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  DWT_Init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -103,9 +114,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    if (ResistiveTouch_Read(&x_pos, &y_pos))
+    ResistiveTouch_RawPoint point;
+    if (ResistiveTouch_Scan(&point))
     {
-
+      x_pos = point.x;
+      y_pos = point.y;
     }
     /* USER CODE BEGIN 3 */
   }
