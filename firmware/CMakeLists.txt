@@ -34,7 +34,12 @@ enable_language(C ASM)
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME}
         Core/Inc/resistive_touch.h
-        Core/Src/resistive_touch.c)
+        Core/Src/resistive_touch.c
+        Core/Inc/controller.h
+        Core/Src/controller.c
+        Core/Inc/math_extra.h
+        Core/Src/math_extra.c
+)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)

@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdbool.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -79,7 +79,7 @@ void DWT_Delay_us(uint32_t microseconds);
 #define A_STEP_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+#define HEARTBEAT_TIM TIM5
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
