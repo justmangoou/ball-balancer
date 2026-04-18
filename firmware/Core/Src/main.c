@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "controller.h"
 #include "resistive_touch.h"
+#include "stepper_a.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -105,6 +106,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim5);
   ResistiveTouch_Init();
+  StepperA_Init();
+  StepperA_SetDirection(1);
+  StepperA_Move(200, 500);
+  HAL_Delay(1000);
+  StepperA_SetDirection(0);
+  StepperA_Move(200, 500);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -402,6 +409,8 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
+
+
 #ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number

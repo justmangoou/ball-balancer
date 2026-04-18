@@ -39,6 +39,8 @@ add_executable(${CMAKE_PROJECT_NAME}
         Core/Src/controller.c
         Core/Inc/math_extra.h
         Core/Src/math_extra.c
+        Core/Src/stepper_a.c
+        Core/Inc/stepper_a.h
 )
 
 # Add STM32CubeMX generated sources
