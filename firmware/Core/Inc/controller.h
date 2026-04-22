@@ -1,7 +1,7 @@
 #ifndef FIRMWARE_CONTROLLER_H
 #define FIRMWARE_CONTROLLER_H
 
-#define BASE_RADIUS        0
+#define BASE_RADIUS        0 //
 #define PLATFORM_RADIUS    0
 #define ARM_LENGTH         0
 #define ROD_LENGTH         0
