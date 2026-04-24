@@ -1,12 +1,17 @@
 #ifndef FIRMWARE_CONTROLLER_H
 #define FIRMWARE_CONTROLLER_H
 
-#define BASE_RADIUS        0 //
+#include "stepper_driver.h"
+
+#define ORIGIN_ANGLE       206.662752199f
+#define LEG_COUNT          3
+
+#define BASE_RADIUS        0
 #define PLATFORM_RADIUS    0
 #define ARM_LENGTH         0
 #define ROD_LENGTH         0
 
-// Precalculation for optimization
+// Precalculation
 #define ARM_L_SQ           (ARM_LENGTH * ARM_LENGTH)
 #define ROD_L_SQ           (ROD_LENGTH * ROD_LENGTH)
 #define ARM_L_X2           (2.0f * ARM_LENGTH)
@@ -15,9 +20,9 @@
 #define INV_ARM_L_X2       (1.0f / (2.0f * ARM_LENGTH))
 
 typedef enum {
-    A = 0,
-    B = 1,
-    C = 2
+    LEG_A = 0,
+    LEG_B = 1,
+    LEG_C = 2,
 } Leg;
 
 typedef struct {
@@ -27,10 +32,12 @@ typedef struct {
 } LegInfo;
 
 static const LegInfo LEGS[3] = {
-    {0.0f,       1.0f,  0.0f},       // Leg A
-    {2.0943951f, -0.5f, 0.8660254f}, // Leg B
-    {4.1887902f, -0.5f, -0.8660254f} // Leg C
+    {0.000000000f,  1.00000000f,  0.000000000f}, // Leg A: 0 rad
+    {2.094395102f, -0.50000000f,  0.866025404f}, // Leg B: 2π/3
+    {4.188790205f, -0.50000000f, -0.866025404f}  // Leg C: 4π/3
 };
+
+static Stepper* LEG_STEPPER_CONTROLLER[3] = { NULL };
 
 typedef struct {
     float kp, ki, kd;

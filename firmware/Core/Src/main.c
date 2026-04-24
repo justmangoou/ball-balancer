@@ -33,8 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CTRL_TARGET_HZ  1000.0f
-#define CTRL_MIN_DT     (1.0f / CTRL_TARGET_HZ)
+#define MISS_THRESHOLD 15
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,20 +48,32 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
+DMA_HandleTypeDef hdma_tim2_ch2_ch4;
+DMA_HandleTypeDef hdma_tim3_ch2;
+DMA_HandleTypeDef hdma_tim4_ch2;
 
 /* USER CODE BEGIN PV */
-static float hclk_inv;
 static uint32_t hclk_mhz;
 static uint32_t last_tick;
-static volatile float dt = 0;
 
-volatile int16_t x_pos = 0;
-volatile int16_t y_pos = 0;
+static bool heartbeat_tick = false;
+volatile bool err_occurred = false;
+
+static bool ball_detected = false;
+static uint8_t miss_counter = 0;
+static Touch_RawPoint raw_point = { 0 };
+static Touch_CenterOffsetPercentage ball_offset = { 0 };
+
+// Debug
+volatile uint16_t x_raw, y_raw;
+volatile float x_parc, y_parc;
+volatile uint16_t pressure;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_TIM2_Init(void);
@@ -70,7 +81,6 @@ static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 static void DWT_Init(void);
-static bool DWT_UpdateTimer(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -107,6 +117,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_TIM5_Init();
   MX_TIM2_Init();
@@ -114,25 +125,44 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim5);
-  ResistiveTouch_Init();
-  StepperA_Init();
-  StepperA_SetDirection(1);
-  StepperA_Move(200, 500);
-  HAL_Delay(1000);
-  StepperA_SetDirection(0);
-  StepperA_Move(200, 500);
+  Touch_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    ResistiveTouch_RawPoint point;
-    if (ResistiveTouch_Scan(&point))
-    {
-      x_pos = point.x;
-      y_pos = point.y;
+    if (heartbeat_tick) {
+      heartbeat_tick = false;
+
+      if (Touch_Scan(&raw_point))
+      {
+        ball_detected = true;
+        miss_counter = 0;
+
+        Touch_CenterOffsetPercent(&raw_point, &ball_offset);
+      }
+      else
+      {
+        if (miss_counter < MISS_THRESHOLD)
+        {
+          miss_counter++;
+        }
+        else
+        {
+          ball_detected = false;
+          ball_offset.x = 0;
+          ball_offset.y = 0;
+        }
+      }
+
+      x_raw = raw_point.x;
+      y_raw = raw_point.y;
+      x_parc = ball_offset.x;
+      y_parc = ball_offset.y;
+      pressure = raw_point.z;
     }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -157,13 +187,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 100;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLN = 200;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -461,6 +490,28 @@ static void MX_TIM5_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
+  /* DMA1_Stream5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
+  /* DMA1_Stream6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -519,7 +570,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void DWT_Init(void) {
   SystemCoreClockUpdate();
-  hclk_inv = 1.0f / (float)HAL_RCC_GetHCLKFreq();
   hclk_mhz = HAL_RCC_GetHCLKFreq() / 1000000;
 
   if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
@@ -531,29 +581,82 @@ void DWT_Init(void) {
   last_tick = DWT->CYCCNT;
 }
 
-void DWT_Delay_us(const uint32_t microseconds) {
+void DWT_Delay_us(const uint32_t microseconds)
+{
   const uint32_t start_tick = DWT->CYCCNT;
   const uint32_t delay_cycles = microseconds * hclk_mhz;
   while ((DWT->CYCCNT - start_tick) < delay_cycles);
 }
 
-static inline bool DWT_UpdateTimer(void) {
-  const uint32_t current_tick = DWT->CYCCNT;
-  const uint32_t elapsed_cycles = current_tick - last_tick;
-  const float temp_dt = (float)elapsed_cycles * hclk_inv;
+uint32_t ADC_Read_Polling()
+{
+  uint32_t result;
+  HAL_ADC_Start(&hadc1);
 
-  // Control the amount of time the control system should be run
-  if (temp_dt >= CTRL_MIN_DT) {
-    dt = temp_dt;
-    last_tick = current_tick;
-    return true;
+  if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
+    result = HAL_ADC_GetValue(&hadc1);
+  } else {
+    result = 0;
   }
-  return false;
+
+  HAL_ADC_Stop(&hadc1);
+
+  return result;
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+void GPIO_SetPinMode(GPIO_TypeDef* port, const uint16_t pin, const uint32_t mode, const uint32_t pull) {
+#if FAST_GPIO_SET_PIN
+  // From https://deepbluembedded.com/stm32-gpio-registers-direct-access-fast-pin-control/
+  // Get pin index (0 to 15) from bitmask
+  const uint32_t pin_pos = __builtin_ctz(pin);
+  const uint32_t bit_offset = pin_pos * 2;
+
+  // Update MODER (Mode Register)
+  // Clear 2 bits, then set new mode. HAL constants for
+  // INPUT (0), OUTPUT (1), and ANALOG (3) match register values.
+  uint32_t temp_moder = port->MODER;
+  temp_moder &= ~(0x3U << bit_offset);
+  temp_moder |= ((mode & 0x3U) << bit_offset);
+  port->MODER = temp_moder;
+
+  // Update PUPDR (Pull-up/Pull-down Register)
+  uint32_t temp_pupdr = port->PUPDR;
+  temp_pupdr &= ~(0x3U << bit_offset);
+  temp_pupdr |= (pull << bit_offset);
+  port->PUPDR = temp_pupdr;
+#else
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = pin;
+  GPIO_InitStruct.Mode = mode;
+  GPIO_InitStruct.Pull = pull;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(port, &GPIO_InitStruct);
+#endif
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
   if (htim->Instance == HEARTBEAT_TIM) {
-    Controller_Heartbeat();
+    heartbeat_tick = true;
+
+    // Heartbeat led visualization
+    static uint16_t count = 0;
+    if (++count >= 500) {
+      HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+      count = 0;
+    }
+  }
+}
+
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+  Stepper* stepper = NULL;
+  if (htim->Instance == LEG_A_TIM) stepper = LEG_STEPPER_CONTROLLER[LEG_A];
+  else if (htim->Instance == LEG_B_TIM) stepper = LEG_STEPPER_CONTROLLER[LEG_B];
+  else if (htim->Instance == LEG_C_TIM) stepper = LEG_STEPPER_CONTROLLER[LEG_C];
+
+  if (stepper != NULL) {
+    Stepper_CleanUp(stepper);
   }
 }
 /* USER CODE END 4 */
@@ -567,6 +670,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  err_occurred = true;
   while (1)
   {
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);

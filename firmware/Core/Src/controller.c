@@ -1,12 +1,18 @@
-#include "stdint.h"
-#include "stdbool.h"
 #include "controller.h"
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <math.h>
+#include "main.h"
 #include "math_extra.h"
 
 /* Private variables ---------------------------------------------------------*/
 static PID_Controller X_CONTROLLER = { 0, 0, 0 };
 static PID_Controller Y_CONTROLLER = { 0, 0, 0 };
 
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
 extern int16_t x_pos;
 extern int16_t y_pos;
 
@@ -16,16 +22,38 @@ bool detected = false;
 static float prv_pid_compute(PID_Controller *pid, float setpoint, float measured, float dt);
 static float prv_theta_compute(Leg leg, float hz, float nx, float ny);
 
-void Controller_Heartbeat(void) {
-    if (x_pos == 0 && y_pos == 0) {
-        // TODO: reset
-        return;
-    }
+void Controller_Init()
+{
+    LEG_STEPPER_CONTROLLER[LEG_A] = Stepper_New(&htim2, LEG_A_TIM_CHANNEL, LEG_A_DIR_GPIO_Port, LEG_A_DIR_Pin);
+    LEG_STEPPER_CONTROLLER[LEG_B] = Stepper_New(&htim3, LEG_B_TIM_CHANNEL, LEG_B_DIR_GPIO_Port, LEG_B_DIR_Pin);
+    LEG_STEPPER_CONTROLLER[LEG_C] = Stepper_New(&htim4, LEG_C_TIM_CHANNEL, LEG_C_DIR_GPIO_Port, LEG_C_DIR_Pin);
 
-    // TODO: calculate pid, from pid to theta, move stepper
+    if (LEG_STEPPER_CONTROLLER[LEG_A] == NULL ||
+        LEG_STEPPER_CONTROLLER[LEG_B] == NULL ||
+        LEG_STEPPER_CONTROLLER[LEG_C] == NULL
+    ) {
+        Error_Handler();
+    }
 }
 
-float prv_pid_compute(PID_Controller *pid, const float setpoint, const float measured, const float dt) {
+void Controller_Heartbeat(void)
+{
+    float x_out = 0, y_out = 0;
+
+    if (x_pos != 0 && y_pos != 0) {
+        x_out = prv_pid_compute(&X_CONTROLLER, 0, x_pos, HEARTBEAT_DELTA_TIME);
+        y_out = prv_pid_compute(&Y_CONTROLLER, 0, y_pos, HEARTBEAT_DELTA_TIME);
+    }
+
+    for (uint8_t i = 0; i < LEG_COUNT; i++) {
+        const int32_t pos = lroundf(ORIGIN_ANGLE - prv_theta_compute(i, -4.25f, -x_out, -y_out));
+
+        Stepper_MoveTo(LEG_STEPPER_CONTROLLER[i], pos);
+    }
+}
+
+float prv_pid_compute(PID_Controller *pid, const float setpoint, const float measured, const float dt)
+{
     const float error = setpoint - measured;
     const float kp = pid->kp;
     const float ki = pid->ki;
@@ -57,7 +85,8 @@ float prv_pid_compute(PID_Controller *pid, const float setpoint, const float mea
  * @warning Returns 0.0f or clamped values if the requested position is
  * physically unreachable (kinematic singularity).
  */
-static float prv_theta_compute(const Leg leg, const float hz, const float nx, const float ny) {
+static float prv_theta_compute(const Leg leg, const float hz, const float nx, const float ny)
+{
     // Normalize vector
     const float nmag = sqrtf(nx * nx + ny * ny + 1.0f);
     const float n_x = nx / nmag;

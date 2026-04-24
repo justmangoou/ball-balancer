@@ -56,6 +56,8 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 void DWT_Delay_us(uint32_t microseconds);
+uint32_t ADC_Read_Polling();
+void GPIO_SetPinMode(GPIO_TypeDef* port, uint16_t pin, uint32_t mode, uint32_t pull);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -85,10 +87,16 @@ void DWT_Delay_us(uint32_t microseconds);
 #define LEG_C_STEP_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define LEG_A_TIM      TIM2
-#define LEG_B_TIM      TIM3
-#define LEG_C_TIM      TIM4
-#define HEARTBEAT_TIM  TIM5
+#define FAST_GPIO_SET_PIN    true
+
+#define LEG_A_TIM            TIM2
+#define LEG_A_TIM_CHANNEL    TIM_CHANNEL_2
+#define LEG_B_TIM            TIM3
+#define LEG_B_TIM_CHANNEL    TIM_CHANNEL_2
+#define LEG_C_TIM            TIM4
+#define LEG_C_TIM_CHANNEL    TIM_CHANNEL_2
+#define HEARTBEAT_TIM        TIM5
+#define HEARTBEAT_DELTA_TIME 0.001f
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

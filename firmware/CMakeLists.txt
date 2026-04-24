@@ -37,10 +37,10 @@ add_executable(${CMAKE_PROJECT_NAME}
         Core/Src/resistive_touch.c
         Core/Inc/controller.h
         Core/Src/controller.c
-        Core/Inc/math_extra.h
-        Core/Src/math_extra.c
         Core/Src/stepper_driver.c
         Core/Inc/stepper_driver.h
+        Core/Inc/math_extra.h
+        Core/Src/math_extra.c
 )
 
 # Add STM32CubeMX generated sources
