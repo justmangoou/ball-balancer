@@ -5,7 +5,7 @@
 
 #define TARGET_MIN      (-100.0f)
 #define TARGET_MAX      100.0f
-#define PREPARE_TIME    50
+#define PREPARE_TIME    20
 
 extern ADC_HandleTypeDef hadc1;
 static ADC_ChannelConfTypeDef sConfig_read = { 0 };
@@ -33,12 +33,8 @@ bool Touch_Scan(Touch_RawPoint *point)
     prv_read_x(samples, TOUCH_SAMPLE_COUNT);
     point->x = prv_get_median(samples, TOUCH_SAMPLE_COUNT);
 
-    DWT_Delay_us(20);
-
     prv_read_y(samples, TOUCH_SAMPLE_COUNT);
     point->y = prv_get_median(samples, TOUCH_SAMPLE_COUNT);
-
-    DWT_Delay_us(20);
 
     point->z = prv_read_z(point->x);
 
@@ -137,7 +133,11 @@ static uint16_t prv_read_single(const uint32_t channel)
 {
     prv_setup_read(channel);
 
-    return ADC_Read_Polling();
+    HAL_ADC_Start(&hadc1);
+    const uint16_t result = ADC_Read_Polling(DEFAULT_ADC_POLLING_TIMEOUT);
+    HAL_ADC_Stop(&hadc1);
+
+    return result;
 }
 
 static void prv_read_samples(const uint32_t channel, uint16_t *samples, const int n)
@@ -145,9 +145,10 @@ static void prv_read_samples(const uint32_t channel, uint16_t *samples, const in
     prv_setup_read(channel);
 
     for (int i = 0; i < n; i++) {
-        samples[i] = ADC_Read_Polling();
-        DWT_Delay_us(20);
+        HAL_ADC_Start(&hadc1);
+        samples[i] = ADC_Read_Polling(DEFAULT_ADC_POLLING_TIMEOUT);
     }
+    HAL_ADC_Stop(&hadc1);
 }
 
  /**

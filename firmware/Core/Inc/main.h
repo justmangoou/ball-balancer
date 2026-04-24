@@ -56,7 +56,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 void DWT_Delay_us(uint32_t microseconds);
-uint32_t ADC_Read_Polling();
+uint32_t ADC_Read_Polling(uint32_t timeout);
 void GPIO_SetPinMode(GPIO_TypeDef* port, uint16_t pin, uint32_t mode, uint32_t pull);
 /* USER CODE END EFP */
 
@@ -88,6 +88,7 @@ void GPIO_SetPinMode(GPIO_TypeDef* port, uint16_t pin, uint32_t mode, uint32_t p
 
 /* USER CODE BEGIN Private defines */
 #define FAST_GPIO_SET_PIN    true
+#define DEFAULT_ADC_POLLING_TIMEOUT 10
 
 #define LEG_A_TIM            TIM2
 #define LEG_A_TIM_CHANNEL    TIM_CHANNEL_2

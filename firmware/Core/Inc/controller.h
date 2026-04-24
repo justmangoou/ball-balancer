@@ -2,6 +2,7 @@
 #define FIRMWARE_CONTROLLER_H
 
 #include "stepper_driver.h"
+#include "resistive_touch.h"
 
 #define ORIGIN_ANGLE       206.662752199f
 #define LEG_COUNT          3
@@ -46,6 +47,8 @@ typedef struct {
     float prev_error;
 } PID_Controller;
 
-void Controller_Heartbeat(void);
+void Controller_Init(void);
+void Controller_Update(Touch_CenterOffsetPercentage *offset);
+void Controller_Reset(void);
 
 #endif //FIRMWARE_CONTROLLER_H

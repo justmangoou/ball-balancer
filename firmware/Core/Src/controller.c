@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <math.h>
+#include "resistive_touch.h"
 #include "main.h"
 #include "math_extra.h"
 
@@ -13,16 +13,12 @@ static PID_Controller Y_CONTROLLER = { 0, 0, 0 };
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
-extern int16_t x_pos;
-extern int16_t y_pos;
-
-bool detected = false;
 
 /* Private function prototypes -----------------------------------------------*/
 static float prv_pid_compute(PID_Controller *pid, float setpoint, float measured, float dt);
 static float prv_theta_compute(Leg leg, float hz, float nx, float ny);
 
-void Controller_Init()
+void Controller_Init(void)
 {
     LEG_STEPPER_CONTROLLER[LEG_A] = Stepper_New(&htim2, LEG_A_TIM_CHANNEL, LEG_A_DIR_GPIO_Port, LEG_A_DIR_Pin);
     LEG_STEPPER_CONTROLLER[LEG_B] = Stepper_New(&htim3, LEG_B_TIM_CHANNEL, LEG_B_DIR_GPIO_Port, LEG_B_DIR_Pin);
@@ -36,20 +32,25 @@ void Controller_Init()
     }
 }
 
-void Controller_Heartbeat(void)
+void Controller_Update(Touch_CenterOffsetPercentage *offset)
 {
     float x_out = 0, y_out = 0;
 
-    if (x_pos != 0 && y_pos != 0) {
-        x_out = prv_pid_compute(&X_CONTROLLER, 0, x_pos, HEARTBEAT_DELTA_TIME);
-        y_out = prv_pid_compute(&Y_CONTROLLER, 0, y_pos, HEARTBEAT_DELTA_TIME);
-    }
+    x_out = prv_pid_compute(&X_CONTROLLER, 0, offset->x, HEARTBEAT_DELTA_TIME);
+    y_out = prv_pid_compute(&Y_CONTROLLER, 0, offset->y, HEARTBEAT_DELTA_TIME);
+
+    x_out = clampf(x_out, -0.25f, 0.25f);
+    y_out = clampf(y_out, -0.25f, 0.25f);
 
     for (uint8_t i = 0; i < LEG_COUNT; i++) {
         const int32_t pos = lroundf(ORIGIN_ANGLE - prv_theta_compute(i, -4.25f, -x_out, -y_out));
 
         Stepper_MoveTo(LEG_STEPPER_CONTROLLER[i], pos);
     }
+}
+
+void Controller_Reset(void) {
+
 }
 
 float prv_pid_compute(PID_Controller *pid, const float setpoint, const float measured, const float dt)

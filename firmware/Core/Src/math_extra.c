@@ -1,3 +1,5 @@
+#include "math_extra.h"
+
 #include <assert.h>
 
 float clampf(const float x, const float min, const float max)

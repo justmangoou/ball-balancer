@@ -33,7 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MISS_THRESHOLD 15
+#define MISS_THRESHOLD 20
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,13 +61,12 @@ volatile bool err_occurred = false;
 
 static bool ball_detected = false;
 static uint8_t miss_counter = 0;
-static Touch_RawPoint raw_point = { 0 };
-static Touch_CenterOffsetPercentage ball_offset = { 0 };
 
-// Debug
+#ifndef NDEBUG
 volatile uint16_t x_raw, y_raw;
 volatile float x_parc, y_parc;
 volatile uint16_t pressure;
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -126,10 +125,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim5);
   Touch_Init();
+  Controller_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  static Touch_RawPoint raw_point = { 0 };
+  static Touch_CenterOffsetPercentage ball_offset = { 0 };
+
   while (1)
   {
     if (heartbeat_tick) {
@@ -141,28 +144,27 @@ int main(void)
         miss_counter = 0;
 
         Touch_CenterOffsetPercent(&raw_point, &ball_offset);
+
+        Controller_Update(&ball_offset);
       }
-      else
+      else if (++miss_counter >= MISS_THRESHOLD)
       {
-        if (miss_counter < MISS_THRESHOLD)
-        {
-          miss_counter++;
-        }
-        else
-        {
-          ball_detected = false;
-          ball_offset.x = 0;
-          ball_offset.y = 0;
-        }
+        ball_detected = false;
+        ball_offset.x = 0;
+        ball_offset.y = 0;
+        Controller_Reset();
+
+        miss_counter = MISS_THRESHOLD;
       }
 
+      #ifndef NDEBUG
       x_raw = raw_point.x;
       y_raw = raw_point.y;
       x_parc = ball_offset.x;
       y_parc = ball_offset.y;
       pressure = raw_point.z;
+      #endif
     }
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -588,18 +590,13 @@ void DWT_Delay_us(const uint32_t microseconds)
   while ((DWT->CYCCNT - start_tick) < delay_cycles);
 }
 
-uint32_t ADC_Read_Polling()
+uint32_t ADC_Read_Polling(const uint32_t timeout)
 {
-  uint32_t result;
-  HAL_ADC_Start(&hadc1);
+  uint32_t result = 0;
 
-  if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
+  if (HAL_ADC_PollForConversion(&hadc1, timeout) == HAL_OK) {
     result = HAL_ADC_GetValue(&hadc1);
-  } else {
-    result = 0;
   }
-
-  HAL_ADC_Stop(&hadc1);
 
   return result;
 }
@@ -610,6 +607,9 @@ void GPIO_SetPinMode(GPIO_TypeDef* port, const uint16_t pin, const uint32_t mode
   // Get pin index (0 to 15) from bitmask
   const uint32_t pin_pos = __builtin_ctz(pin);
   const uint32_t bit_offset = pin_pos * 2;
+  const uint32_t primask = __get_PRIMASK();
+
+  __disable_irq();
 
   // Update MODER (Mode Register)
   // Clear 2 bits, then set new mode. HAL constants for
@@ -624,6 +624,8 @@ void GPIO_SetPinMode(GPIO_TypeDef* port, const uint16_t pin, const uint32_t mode
   temp_pupdr &= ~(0x3U << bit_offset);
   temp_pupdr |= (pull << bit_offset);
   port->PUPDR = temp_pupdr;
+
+  __set_PRIMASK(primask);
 #else
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   GPIO_InitStruct.Pin = pin;
