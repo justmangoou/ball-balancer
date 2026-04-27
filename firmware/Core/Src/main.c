@@ -104,7 +104,11 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  #if !defined(__FPU_USED) || (__FPU_USED != 1)
+  #error "FPU is NOT enabled in the compiler! Check CMake flags."
+  #endif
 
+  SCB->CPACR |= ((3UL << 10*2) | (3UL << 11*2));
   /* USER CODE END Init */
 
   /* Configure the system clock */

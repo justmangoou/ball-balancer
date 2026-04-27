@@ -1,5 +1,6 @@
-#include <stdlib.h>
 #include "stepper_driver.h"
+
+#include <stdlib.h>
 
 static void prv_set_direction(const Stepper* stepper, int32_t target_pos);
 static void prv_prepare_burst(Stepper* stepper, uint32_t steps);
@@ -9,7 +10,7 @@ Stepper* Stepper_New(TIM_HandleTypeDef* htim, const uint32_t tim_channel, GPIO_T
     if (stepper == NULL) return NULL;
 
     // Copy the hardware handles
-    stepper->htim = htim;  // This copies the whole HAL structure
+    stepper->htim = htim;
     stepper->tim_channel = tim_channel;
     stepper->dir_port = dir_port;
     stepper->dir_pin = dir_pin;

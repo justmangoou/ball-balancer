@@ -6,16 +6,18 @@
 #include "main.h"
 #include "math_extra.h"
 
-/* Private variables ---------------------------------------------------------*/
-static PID_Controller X_CONTROLLER = { 0, 0, 0 };
-static PID_Controller Y_CONTROLLER = { 0, 0, 0 };
+static PID_Controller X_CONTROLLER = { 0.0025f, 0, 0.0001f };
+static PID_Controller Y_CONTROLLER = { 0.0025f, 0, 0.0001f };
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
-/* Private function prototypes -----------------------------------------------*/
+volatile float x_out, y_out;
+
+static void prv_move(float nx, float ny);
 static float prv_pid_compute(PID_Controller *pid, float setpoint, float measured, float dt);
+static void prv_pid_reset(PID_Controller *pid);
 static float prv_theta_compute(Leg leg, float hz, float nx, float ny);
 
 void Controller_Init(void)
@@ -34,26 +36,31 @@ void Controller_Init(void)
 
 void Controller_Update(Touch_CenterOffsetPercentage *offset)
 {
-    float x_out = 0, y_out = 0;
-
     x_out = prv_pid_compute(&X_CONTROLLER, 0, offset->x, HEARTBEAT_DELTA_TIME);
     y_out = prv_pid_compute(&Y_CONTROLLER, 0, offset->y, HEARTBEAT_DELTA_TIME);
 
     x_out = clampf(x_out, -0.25f, 0.25f);
     y_out = clampf(y_out, -0.25f, 0.25f);
 
+    prv_move(-x_out, -y_out);
+}
+
+void Controller_Reset(void) {
+    prv_pid_reset(&X_CONTROLLER);
+    prv_pid_reset(&Y_CONTROLLER);
+
+    prv_move(0, 0);
+}
+
+static void prv_move(const float nx, const float ny) {
     for (uint8_t i = 0; i < LEG_COUNT; i++) {
-        const int32_t pos = lroundf(ORIGIN_ANGLE - prv_theta_compute(i, -4.25f, -x_out, -y_out));
+        const int32_t pos = lroundf(ORIGIN_ANGLE - prv_theta_compute(i, -4.25f, nx, ny));
 
         Stepper_MoveTo(LEG_STEPPER_CONTROLLER[i], pos);
     }
 }
 
-void Controller_Reset(void) {
-
-}
-
-float prv_pid_compute(PID_Controller *pid, const float setpoint, const float measured, const float dt)
+static float prv_pid_compute(PID_Controller *pid, const float setpoint, const float measured, const float dt)
 {
     const float error = setpoint - measured;
     const float kp = pid->kp;
@@ -61,13 +68,22 @@ float prv_pid_compute(PID_Controller *pid, const float setpoint, const float mea
     const float kd = pid->kd;
 
     pid->integral += (error + pid->prev_error) * 0.5f * dt;
+    const float max_i = 0.05f / (ki > 0 ? ki : 1.0f);
+    pid->integral = clampf(pid->integral, -max_i, max_i);
 
-    const float derivative = (error - pid->prev_error) / dt;
-    const float output = (kp * error) + (ki * pid->integral) + (kd * derivative);
+    const float raw_derivative = (error - pid->prev_error) / dt;
+    pid->filtered_d = (0.1f * raw_derivative) + (0.9f * pid->filtered_d);
+    const float output = (kp * error) + (ki * pid->integral) + (kd * pid->filtered_d);
 
     pid->prev_error = error;
 
     return output;
+}
+
+static void prv_pid_reset(PID_Controller *pid)
+{
+    pid->integral = 0;
+    pid->prev_error = 0;
 }
 
 /**

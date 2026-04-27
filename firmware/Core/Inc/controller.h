@@ -44,6 +44,7 @@ typedef struct {
     float kp, ki, kd;
 
     float integral;
+    float filtered_d;
     float prev_error;
 } PID_Controller;
 
