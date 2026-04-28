@@ -22,6 +22,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "controller.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,6 +42,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+extern Stepper* LEG_STEPPER_CONTROLLER[];
+
+#ifndef NDEBUG
+extern volatile uint16_t x_raw, y_raw;
+extern volatile float x_parc, y_parc;
+extern volatile uint16_t pressure;
+#endif
 
 /* USER CODE END PV */
 
@@ -55,10 +63,8 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DMA_HandleTypeDef hdma_tim2_ch2_ch4;
-extern DMA_HandleTypeDef hdma_tim3_ch2;
-extern DMA_HandleTypeDef hdma_tim4_ch2;
 extern TIM_HandleTypeDef htim5;
+extern TIM_HandleTypeDef htim9;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -202,45 +208,21 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles DMA1 stream3 global interrupt.
+  * @brief This function handles TIM1 break interrupt and TIM9 global interrupt.
   */
-void DMA1_Stream3_IRQHandler(void)
+void TIM1_BRK_TIM9_IRQHandler(void)
 {
-  /* USER CODE BEGIN DMA1_Stream3_IRQn 0 */
+  /* USER CODE BEGIN TIM1_BRK_TIM9_IRQn 0 */
+  for (int i = 0; i < LEG_COUNT; i++) {
+    if (LEG_STEPPER_CONTROLLER[i] != NULL) {
+      Stepper_Process(LEG_STEPPER_CONTROLLER[i]);
+    }
+  }
+  /* USER CODE END TIM1_BRK_TIM9_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim9);
+  /* USER CODE BEGIN TIM1_BRK_TIM9_IRQn 1 */
 
-  /* USER CODE END DMA1_Stream3_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_tim4_ch2);
-  /* USER CODE BEGIN DMA1_Stream3_IRQn 1 */
-
-  /* USER CODE END DMA1_Stream3_IRQn 1 */
-}
-
-/**
-  * @brief This function handles DMA1 stream5 global interrupt.
-  */
-void DMA1_Stream5_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream5_IRQn 0 */
-
-  /* USER CODE END DMA1_Stream5_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_tim3_ch2);
-  /* USER CODE BEGIN DMA1_Stream5_IRQn 1 */
-
-  /* USER CODE END DMA1_Stream5_IRQn 1 */
-}
-
-/**
-  * @brief This function handles DMA1 stream6 global interrupt.
-  */
-void DMA1_Stream6_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream6_IRQn 0 */
-
-  /* USER CODE END DMA1_Stream6_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_tim2_ch2_ch4);
-  /* USER CODE BEGIN DMA1_Stream6_IRQn 1 */
-
-  /* USER CODE END DMA1_Stream6_IRQn 1 */
+  /* USER CODE END TIM1_BRK_TIM9_IRQn 1 */
 }
 
 /**
@@ -249,6 +231,36 @@ void DMA1_Stream6_IRQHandler(void)
 void TIM5_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM5_IRQn 0 */
+  static uint16_t count = 0;
+  if (++count >= 500) {
+    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+    count = 0;
+  }
+
+  static Touch_RawPoint raw_point = { 0 };
+  static Touch_CenterOffsetPercentage ball_offset = { 0 };
+  static uint8_t miss_counter = 0;
+
+  if (Touch_Scan(&raw_point)) {
+    miss_counter = 0;
+
+    Touch_CenterOffsetPercent(&raw_point, &ball_offset);
+    Controller_Update(&ball_offset);
+  } else if (++miss_counter >= MISS_THRESHOLD) {
+    miss_counter = MISS_THRESHOLD;
+
+    ball_offset.x = 0;
+    ball_offset.y = 0;
+    Controller_Reset();
+  }
+
+  #ifndef NDEBUG
+  x_raw = raw_point.x;
+  y_raw = raw_point.y;
+  x_parc = ball_offset.x;
+  y_parc = ball_offset.y;
+  pressure = raw_point.z;
+  #endif
 
   /* USER CODE END TIM5_IRQn 0 */
   HAL_TIM_IRQHandler(&htim5);

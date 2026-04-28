@@ -7,26 +7,20 @@
 #define STEP_BUFFER_SIZE 16
 
 typedef struct {
-    TIM_HandleTypeDef* htim;
-    uint32_t           tim_channel;
-
+    GPIO_TypeDef*      step_port;
+    uint16_t           step_pin;
     GPIO_TypeDef*      dir_port;
     uint16_t           dir_pin;
 
     int32_t            current_pos;
     int32_t            target_pos;
-    bool               is_moving;
 
-    float              current_velocity;
-    float              max_speed;
-    float              acceleration;
-
-    uint16_t           burst_buffer[STEP_BUFFER_SIZE * 2] __attribute__((aligned(2)));
-    uint16_t           steps_to_move;
+    volatile float     velocity;
+    float              accumulator;
 } Stepper;
 
-Stepper* Stepper_New(TIM_HandleTypeDef* htim, uint32_t tim_channel, GPIO_TypeDef* dir_port, uint16_t dir_pin);
-void Stepper_MoveTo(Stepper* stepper, int32_t target_pos);
-void Stepper_CleanUp(Stepper* stepper);
+Stepper* Stepper_New(GPIO_TypeDef* step_port, uint16_t step_pin, GPIO_TypeDef* dir_port, uint16_t dir_pin);
+void Stepper_MoveTo(Stepper* stepper, int32_t target_pos, float velocity);
+void Stepper_Process(Stepper* stepper);
 
 #endif

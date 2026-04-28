@@ -15,12 +15,16 @@
 #define Y_NEG_ADC_CHANNEL    ADC_CHANNEL_4
 #define TOUCH_SAMPLE_COUNT   7
 
+#if TOUCH_SAMPLE_COUNT < 1 || TOUCH_SAMPLE_COUNT > 11 || TOUCH_SAMPLE_COUNT % 2 == 0
+#error TOUCH_SAMPLE_COUNT must be odd and in range from 1 to 11
+#endif
+
 typedef struct {
-    uint16_t x, y, z;
+  uint16_t x, y, z;
 } Touch_RawPoint;
 
 typedef struct {
-    float x, y;
+  float x, y;
 } Touch_CenterOffsetPercentage;
 
 void Touch_Init(void);

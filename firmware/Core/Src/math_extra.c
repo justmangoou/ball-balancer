@@ -2,9 +2,9 @@
 
 #include <assert.h>
 
-float clampf(const float x, const float min, const float max)
+float clampf(const float in, const float min, const float max)
 {
-    return __builtin_fminf(__builtin_fmaxf(x, min), max);
+    return __builtin_fminf(__builtin_fmaxf(in, min), max);
 }
 
 float map_clampedf(

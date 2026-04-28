@@ -4,8 +4,6 @@
 # Allow specific shared configuration folders and all their contents
 !**/.idea/codeStyles/
 !**/.idea/codeStyles/**
-!**/.idea/debugServers/
-!**/.idea/debugServers/**
 !**/.idea/runConfigurations/
 !**/.idea/runConfigurations/**
 

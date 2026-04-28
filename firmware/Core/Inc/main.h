@@ -49,8 +49,6 @@ extern "C" {
 
 /* USER CODE END EM */
 
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -87,6 +85,8 @@ void GPIO_SetPinMode(GPIO_TypeDef* port, uint16_t pin, uint32_t mode, uint32_t p
 #define LEG_C_STEP_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+#define MISS_THRESHOLD 20
+
 #define FAST_GPIO_SET_PIN    true
 #define DEFAULT_ADC_POLLING_TIMEOUT 10
 

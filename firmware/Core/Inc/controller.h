@@ -38,8 +38,6 @@ static const LegInfo LEGS[3] = {
     {4.188790205f, -0.50000000f, -0.866025404f}  // Leg C: 4π/3
 };
 
-static Stepper* LEG_STEPPER_CONTROLLER[3] = { NULL };
-
 typedef struct {
     float kp, ki, kd;
 
