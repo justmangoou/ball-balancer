@@ -47,7 +47,7 @@ void Stepper_Process(Stepper *stepper) {
 
     // 4. Atomic Step Pulse
     stepper->step_port->BSRR = stepper->step_pin;
-    for (volatile int d = 0; d < 20; d++);
+    for (volatile int d = 0; d < 40; d++) { __asm("nop"); }
     stepper->step_port->BSRR = (uint32_t) stepper->step_pin << 16;
   }
 }
