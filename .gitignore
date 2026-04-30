@@ -1,3 +1,5 @@
+report/main.pdf
+
 # Ignore all files/folders inside any .idea directory
 **/.idea/*
 
