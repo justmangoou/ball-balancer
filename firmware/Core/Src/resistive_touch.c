@@ -36,9 +36,9 @@ bool Touch_Scan(Touch_RawPoint *point) {
 
   point->z = prv_read_z(point->x);
 
-  const bool is_pressure_valid = point->z >= 10 && point->z <= 5000;
-  const bool is_x_valid = point->x < 4050;
-  const bool is_y_valid = point->y < 4050;
+  const bool is_pressure_valid = point->z >= 10 && point->z <= 4000;
+  const bool is_x_valid = point->x < 4000;
+  const bool is_y_valid = point->y < 4000;
 
   return is_pressure_valid && is_x_valid && is_y_valid;
 }

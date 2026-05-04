@@ -61,7 +61,7 @@
     let fig_num = numbering("1.1", ch, num)
 
     if it.kind == image {
-      [#emph[Hình #fig_num]: #it.body]
+      [#emph[Hình #fig_num: #it.body]]
     } else if it.kind == raw {
       [Đoạn mã #fig_num: #it.body]
     } else if it.kind == table {
@@ -73,6 +73,9 @@
 #set ref(supplement: it => {
   if it.func() == figure {
     emph[Hình]
+  } else if it.func() == heading {
+    if (it.level == 1) { emph[Chương] }
+    else { emph[Mục] }
   } else {
     it.supplement
   }

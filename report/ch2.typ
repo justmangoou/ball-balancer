@@ -14,13 +14,13 @@
 
         Đây là dạng *động học nghịch* điển hình: cho tư thế mong muốn $(R, p)$, ta tính được $q_1, q_2, q_3$ để sinh lệnh cho các cơ cấu tịnh tiến (xung bước/độ quay motor → dịch chuyển). Ngược lại, *động học thuận* (từ $q_i$ suy ra $(R,p)$) thường phức tạp hơn và hay được giải bằng phương pháp số; trong bài toán cân bằng, hệ thống có thể dùng cảm biến (màn cảm ứng) để phản hồi trực tiếp trạng thái bi nên không nhất thiết phải giải động học thuận chính xác ở mọi thời điểm.
 
-    == Màn cảm ứng điện trở
+    == Màn cảm ứng điện trở <resistive_touch_mechanism>
         Màn cảm ứng điện trở hoạt động dựa trên hai lớp dẫn điện được ngăn cách bởi một lớp cách điện mỏng. Khi có lực tác động lên bề mặt, hai lớp này tiếp xúc tại điểm chạm, tạo thành một cầu điện trở. Bằng cách đo điện áp tại điểm tiếp xúc, hệ thống có thể xác định tọa độ theo hai trục X và Y.
 
         Ưu điểm của loại màn này là chi phí thấp và có thể sử dụng với nhiều vật liệu tiếp xúc. Tuy nhiên, nhược điểm là độ bền không cao, độ nhạy kém hơn so với màn cảm ứng điện dung và không hỗ trợ đa điểm hiệu quả.
 
         #figure(
-            image("assets/resistive-touch-mechanism.png", width: 340pt),
+            image("assets/resistive-touch-mechanism.png", width: 70%),
             caption: [Cấu tạo của màn cảm ứng điện trở],
         )
 
@@ -32,7 +32,7 @@
 
         - *Thành phần tỉ lệ (P)*: phản ứng theo sai số tức thời.
         - *Thành phần tích phân (I)*: tích lũy sai số theo thời gian nhằm loại bỏ sai số tĩnh.
-        - *Thành phần vi phân (D)*: dự đoán xu hướng thay đổi của sai số để giảm dao động.
+        - *Thành phần đạo hàm (D)*: dự đoán xu hướng thay đổi của sai số để giảm dao động.
 
         Công thức tổng quát trong miền thời gian:
 

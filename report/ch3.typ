@@ -1,13 +1,14 @@
 #import "@preview/fletcher:0.5.8": diagram, node, edge
+#import "constants.typ": HEARTBEAT_TIMER, HEARTBEAT_INTERVAL, ACTUATOR_TIMER, ACTUATOR_INTERVAL
 
 = Thiết kế và triển khai hệ thống
     == Thiết kế tổng thể
-        Hệ thống được thiết kế theo mô hình điều khiển vòng kín (closed-loop control), trong đó vị trí của quả bóng được đo liên tục và sử dụng làm tín hiệu phản hồi để điều chỉnh trạng thái của hệ thống.
+        Hệ thống được thiết kế theo mô hình điều khiển vòng kín, trong đó vị trí của quả bóng được đo liên tục và sử dụng làm tín hiệu phản hồi để điều chỉnh trạng thái của hệ thống.
 
         Về mặt chức năng, hệ thống bao gồm ba khối chính:
 
         - *Khối cảm biến:* sử dụng màn hình cảm ứng điện trở để xác định tọa độ $(x, y)$ của quả bóng.
-        - *Khối xử lý:* vi điều khiển thực hiện việc thu nhận dữ liệu và tính toán tín hiệu điều khiển.
+        - *Khối xử lý:* vi điều khiển thực hiện nhiệm vụ thu nhận dữ liệu và tính toán tín hiệu điều khiển.
         - *Khối chấp hành:* bao gồm driver và các động cơ bước để điều chỉnh góc nghiêng của mặt phẳng.
 
         #linebreak()
@@ -21,7 +22,7 @@
                 node((0,0), [Cảm biến], name: <sensor>, corner-radius: 2pt),
                 node((0,1), [Vi điều khiển], name: <controller>, corner-radius: 2pt),
                 node((0,2), [Driver], name: <driver>, corner-radius: 2pt),
-                node((0,3), [Động cơ], name: <motor>, corner-radius: 2pt),
+                node((0,3), [Động cơ bước], name: <motor>, corner-radius: 2pt),
                 node((0,4), [Mặt phẳng], name: <plate>, corner-radius: 2pt),
 
                 // Left labels
@@ -55,7 +56,7 @@
     == Thiết kế phần cứng
         === Danh sách linh kiện
             ==== Vi điều khiển STM32F411CEU6
-                *STM32F411CEU6 (Blackpill)* là vi điều khiển thuộc dòng STM32F4 của STMicroelectronics, sử dụng lõi ARM Cortex-M4 tích hợp Floating Point Unit (FPU), cho phép xử lý hiệu quả các phép toán số thực, phù hợp với các hệ thống điều khiển yêu cầu hiệu suất cao.
+                *STM32F411CEU6 (Blackpill)* là vi điều khiển thuộc dòng STM32F4 của STMicroelectronics, sử dụng nhân ARM Cortex-M4 tích hợp Floating Point Unit (FPU), cho phép xử lý hiệu quả các phép toán số thực, phù hợp với các hệ thống điều khiển yêu cầu hiệu suất cao.
 
                 #figure(
                     caption: [Thông số kỹ thuật STM32F411CEU6],
@@ -66,7 +67,7 @@
                         stroke: 0.5pt + black,
             
                         [*Nhân*],                    
-                        [ARM 32-bit Cortex-M4 CPU với FPU],
+                        [ARM 32-bit Cortex-M4 với FPU],
 
                         [*Tốc độ xung nhịp tối đa*], 
                         [100 MHz],
@@ -91,10 +92,10 @@
                 #figure(
                     image("assets/STM32F411CEU6-pinout.png", width: 340pt),
                     caption: [Sơ đồ chân của STM32F411CEU6 (Blackpill)],
-                ) <glacier>
+                )
 
             ==== Màn cảm ứng điện trở
-                *Màn hình cảm ứng điện trở* được sử dụng để thu nhận thông tin vị trí tiếp xúc trên bề mặt. Với cấu trúc 4 dây điện trở, thiết bị có khả năng phát hiện vị trí chạm với độ chính xác tương đối cao và ổn định. Nhờ kích thước vùng hoạt động lớn và cấu tạo đơn giản, loại màn hình này phù hợp với các ứng dụng yêu cầu xác định vị trí trên mặt phẳng với chi phí thấp.
+                *Màn hình cảm ứng điện trở* được sử dụng để thu nhận thông tin vị trí tiếp xúc trên bề mặt. Với cấu trúc 4 dây điện trở, thiết bị có khả năng xác định vị trí chạm với độ chính xác tương đối cao và ổn định. Nhờ kích thước vùng hoạt động lớn và cấu tạo đơn giản, loại màn hình này phù hợp với các ứng dụng yêu cầu xác định vị trí trên mặt phẳng với chi phí thấp. Nguyên lý hoạt động được trình bày tại @resistive_touch_mechanism.
 
                 #figure(
                     caption: [Thông số kỹ thuật màn cảm ứng điện trở],
@@ -115,7 +116,7 @@
                 #figure(
                     image("assets/resistive-touch.png", width: 180pt),
                     caption: [Màn hình cảm ứng điện trở 9"],
-                ) <glacier>
+                )
                 #linebreak()
 
             ==== Driver TMC2208
@@ -150,7 +151,7 @@
                 #figure(
                     image("assets/TMC2208-pinout.png", width: 180pt),
                     caption: [Sơ đồ chân cắm mạch điều khiển động cơ bước TMC2208],
-                ) <glacier>
+                ) 
                 #linebreak()
 
             ==== Động cơ bước 17HS4401S
@@ -179,12 +180,12 @@
                 #figure(
                     image("assets/17HS4401S.png", width: 180pt),
                     caption: [Động cơ bước 17HS4401S],
-                ) <glacier>
+                )
                 #linebreak()
                 #figure(
                     image("assets/17HS4401S-blueprint.png", width: 360pt),
                     caption: [Bản vẽ kỹ thuật động cơ bước 17HS4401S],
-                ) <glacier>
+                )
                 #linebreak()
             
             ==== Module hạ áp LM2596
@@ -222,7 +223,7 @@
                 #figure(
                     image("assets/LM2596.png", width: 140pt),
                     caption: [Module hạ áp DC-DC LM2596 (tích hợp vôn kế)],
-                ) <glacier>
+                )
                 #linebreak()
             ==== Linh kiện phụ trợ
                 #figure(
@@ -246,15 +247,21 @@
                     [],
                     )
                 )
+        // TODO: make this pro
         === Sơ đồ nối mạch
-            #linebreak()
+            Sơ đồ nối mạch thể hiện cách liên kết tổng thể giữa các thành phần chính trong hệ thống, bao gồm vi điều khiển, cảm biến, driver động cơ và nguồn cấp. Sơ đồ này giúp minh họa trực quan cấu trúc phần cứng và luồng kết nối giữa các khối chức năng.
+
+            #v(0.7em)
+
             #figure(
                 image("assets/board.png", width: 100%),
-                caption: [Sơ đồ nối mạch],
-            ) <glacier>
+                caption: [Sơ đồ kết nối tổng thể giữa vi điều khiển, driver động cơ và các khối chức năng],
+            )
             #pagebreak()
 
-        === Sơ đồ chân
+        === Sơ đồ chân nối
+            Bảng dưới đây trình bày chi tiết kết nối giữa các chân của linh kiện và chân của vi điều khiển, bao gồm cả cấu hình I/O tương ứng. 
+
             #figure(
                 table(
                     columns: (1fr, 1fr, 1.2fr, 1fr),
@@ -275,66 +282,115 @@
                     [TMC2208 A], [EN], [PB12], [GPIO Out],
         
                     [TMC2208 B], [STEP], [PB5], [GPIO Out],
-                    [TMC2208 B], [DIR], [PA4], [GPIO Out],
+                    [TMC2208 B], [DIR], [PB4], [GPIO Out],
                     [TMC2208 B], [EN], [PB12], [GPIO Out],
         
                     [TMC2208 C], [STEP], [PB7], [GPIO Out],
                     [TMC2208 C], [DIR], [PB6], [GPIO Out],
                     [TMC2208 C], [EN], [PB12], [GPIO Out],
 
-                    [LM2596], [3.3V Logic Rail], [3V3 Pin], [Power In],
+                    [LM2596], [OUT+], [3V3], [-],
+                    [LM2596], [OUT-], [GND], [-],
                 ),
-                caption: [Bảng sơ đồ chân nối với vi điều khiển],
-            ) <glacier>
-            #linebreak()
+                caption: [Sơ đồ chân nối với vi điều khiển],
+            )
+
+            #v(-1em)
+            #h(0em)
+
+            Trong đó, các chân điều khiển của driver TMC2208 (STEP, DIR, EN) được kết nối trực tiếp với các chân GPIO của vi điều khiển, cho phép điều khiển độc lập từng động cơ. Các chân EN được nối chung để có thể bật/tắt đồng thời toàn bộ driver. 
+            
+            Đối với màn cảm ứng điện trở, các chân được cấu hình linh hoạt giữa chế độ GPIO và ADC để thực hiện việc đo tọa độ, theo nguyên lý hoạt động đã trình bày tại @resistive_touch_mechanism.
 
             #figure(
                 table(
-                    columns: (1fr, 1fr, 1.2fr),
+                    columns: (1fr, 1fr),
                     inset: 10pt,
                     align: left + horizon,
                     stroke: 0.5pt + black,
                     fill: (x, y) => if y == 0 { gray.lighten(80%) },
         
-                    [*Linh kiện*], [*Chân linh kiện*], [*Chân vi điều khiển*],
+                    [*Chân driver*], [*Kết nối / chức năng*],
         
-                    [Màn cảm ứng], [X+], [PA0], [ADC / GPIO Out],
-                    [Màn cảm ứng], [Y+], [PA1], [ADC / GPIO Out],
-                    [Màn cảm ứng], [X-], [PA2], [ADC / GPIO In],
-                    [Màn cảm ứng], [Y-], [PA3], [ADC / GPIO In],
+                    [VM],  [Nguồn động cơ (DC 24V)],
+                    [VIO], [Nguồn logic (3.3V)],
+                    [GND], [Đất chung],
+                    [M1A], [Cuộn 1 - Động cơ bước],
+                    [M1B], [Cuộn 1 - Động cơ bước],
+                    [M2A], [Cuộn 2 - Động cơ bước],
+                    [M2B], [Cuộn 2 - Động cơ bước],
                     
-                    [TMC2208 A], [STEP], [PA15], [GPIO Out],
-                    [TMC2208 A], [DIR], [PB3], [GPIO Out],
-                    [TMC2208 A], [EN], [PB12], [GPIO Out],
-        
-                    [TMC2208 B], [STEP], [PB5], [GPIO Out],
-                    [TMC2208 B], [DIR], [PA4], [GPIO Out],
-                    [TMC2208 B], [EN], [PB12], [GPIO Out],
-        
-                    [TMC2208 C], [STEP], [PB7], [GPIO Out],
-                    [TMC2208 C], [DIR], [PB6], [GPIO Out],
-                    [TMC2208 C], [EN], [PB12], [GPIO Out],
-
-                    [Voltage Regulator], [5V Logic Rail], [5V Pin], [Power In],
-                    [Voltage Regulator], [3.3V Logic Rail], [3V3 Pin], [Power In],
+                    [MS1], [3V3 - Cấu hình vi bước],
+                    [MS2], [3V3 - Cấu hình vi bước],
                 ),
-                caption: [Bảng sơ đồ chân nối với mạch điều khiển động cơ TMC2208 đến các linh kiện],
-            ) <glacier>
-            #linebreak()
+                caption: [Sơ đồ kết nối các chân của driver TMC2208 với nguồn và động cơ bước],
+            )
+
+            #v(-1em)
+            #h(0em)
+
+            Việc thiết lập các chân MS1 và MS2 ở mức cao (3.3V) cấu hình driver hoạt động ở chế độ vi bước 1/16. Chế độ này giúp cải thiện độ mượt của chuyển động, tăng độ phân giải điều khiển và giảm rung động cũng như tiếng ồn của động cơ bước.
+
+            Trong thiết kế này, giao tiếp UART của driver không được sử dụng. Thay vào đó, các tham số hoạt động được cấu hình thông qua các chân phần cứng (MS1, MS2). Cách tiếp cận này giúp giảm độ phức tạp của hệ thống, đơn giản hóa việc lập trình và giảm yêu cầu về tài nguyên vi điều khiển, đồng thời vẫn đáp ứng đủ yêu cầu điều khiển của bài toán.
 
         #pagebreak()
 
     == Thiết kế cơ khí
+        #pagebreak()
     == Kiến trúc phần mềm 
         === Công cụ phát triển
             Trong quá trình phát triển hệ thống, các công cụ phần mềm sau được sử dụng:
 
             - #link("https://www.st.com/en/development-tools/stm32cubemx.html")[*STM32CubeMX*]: dùng để cấu hình vi điều khiển, thiết lập clock, GPIO, ADC và các ngoại vi cần thiết, đồng thời sinh mã khởi tạo ban đầu.
 
-            - #link("http://openocd.org/")[*OpenOCD*] và #link("https://www.st.com/en/development-tools/stsw-link004.html")[*ST-Link Utility*]: được sử dụng để nạp chương trình xuống vi điều khiển và thực hiện debug trong quá trình phát triển.
+            - #link("http://openocd.org/")[*OpenOCD*] và #link("https://www.st.com/en/development-tools/stm32cubeprog.html")[*STM32CubeProgrammer*]: được sử dụng để nạp chương trình xuống vi điều khiển và thực hiện debug trong quá trình phát triển.
 
             - #link("https://www.jetbrains.com/clion/")[*CLion*]: môi trường phát triển tích hợp (IDE) dùng để viết, quản lý và debug mã nguồn chương trình.
 
             - #link("https://cmake.org/")[*CMake*]: công cụ tạo hệ thống biên dịch, dùng để cấu hình và sinh các tệp phục vụ quá trình biên dịch và liên kết chương trình (ví dụ: Makefile, Ninja).
 
+        === Cấu hình hệ thống
+            // TODO: Make this pro
+            Hệ thống sử dụng nguồn xung nhịp ngoại HSE với tần số 25 MHz. Thông qua bộ nhân tần PLL với các tham số cấu hình $M=25$, $N=200$ và $P=2$, vi điều khiển đạt được tần số hoạt động trung tâm (SYSCLK) lên đến 100 MHz. 
+
+            #figure(
+                image("assets/clock-config.png", width: 100%),
+                caption: [Cấu hình xung nhịp hệ thống],
+            )
+
+            Cấu hình này cung cấp hiệu suất xử lý cao cho các bus ngoại vi:
+            - HCLK (AHB bus): 100 MHz.
+            - PCLK1 (APB1): 50 MHz (Timer đạt 100 MHz).
+            - PCLK2 (APB2): 100 MHz.
+
+            Tốc độ này đảm bảo khả năng đáp ứng thời gian thực cho việc đọc dữ liệu cảm biến, thực hiện các thuật toán điều khiển phức tạp và phát xung PWM điều khiển động cơ với độ chính xác cao. 
             
+            Ngoài ra, bộ đếm chu kỳ DWT tích hợp trong lõi ARM Cortex-M được khai thác để tạo các hàm trễ với độ chính xác mức micro giây ($mu s$), giúp tối ưu hóa việc đồng bộ hóa và quản lý thời gian trong hệ thống.
+
+        === Thiết lập Timer
+            ==== Timer điều khiển (#HEARTBEAT_TIMER)
+                Timer #HEARTBEAT_TIMER đảm nhiệm làm nhiệm vụ điều khiển chính cho việc đọc cảm biến và cập nhật thuật toán điều khiển.
+
+                Cấu hình:
+                - Prescaler: $"PSC" = 99$
+                - Auto-reload: $"ARR" = 999$
+                
+                #align(center)[
+                    $f = (100 "Mhz")/(("PSC" + 1)("ARR" + 1)) = (100 times 10^6)/(100 times 1000) = 1 "kHz"$
+                ]
+
+                #v(0.5em)
+                Tương ứng với chu kỳ #HEARTBEAT_INTERVAL.
+
+            ==== Timer chấp hành (#ACTUATOR_TIMER)
+                Timer #ACTUATOR_TIMER đảm nhiệm làm nhiệm vụ thực hiện xung PWM điều khiển động cơ bước.
+
+                Cấu hình:
+                - Prescaler: $"PSC" = 99$
+                - Auto-reload: $"ARR" = 24$
+                
+                #align(center)[
+                    $f = (100 "Mhz")/(("PSC" + 1)("ARR" + 1)) = (100 times 10^6)/(100 times 25) = 40 "kHz"$
+                ]
+                #v(0.5em)
+                Tương ứng với chu kỳ #ACTUATOR_INTERVAL.
