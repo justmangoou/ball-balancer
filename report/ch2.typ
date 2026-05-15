@@ -27,16 +27,23 @@
     == Điều khiển động cơ bước thông qua driver
         Động cơ bước (stepper) di chuyển theo từng bước rời rạc; driver nhận các xung điều khiển (xung bước) và tín hiệu hướng để quay theo bước hoặc hướng tương ứng. Các driver phổ biến (ví dụ A4988, DRV8825) hỗ trợ microstepping để tăng độ mịn chuyển động bằng cách điều khiển dòng cuộn dây. Khi tích hợp, cần cấu hình giới hạn dòng, nối các chân `STEP`, `DIR` và `ENABLE`, và đảm bảo cấp nguồn/phân tản nhiệt cho driver để tránh quá nhiệt.
 
-    == Thuật toán điều khiển PID
-        Thuật toán điều khiển Proportional–Integral–Derivative (PID) là phương pháp điều khiển phản hồi dựa trên sai lệch giữa giá trị đặt và giá trị thực. Bộ điều khiển gồm ba thành phần:
+    == Thuật toán điều khiển PID <pid_control_algorithm>
+        Thuật toán điều khiển Proportional–Integral–Derivative (PID) là một phương pháp điều khiển phản hồi được sử dụng phổ biến trong các hệ thống. Trong đó tín hiệu điều khiển được xác định dựa trên sai lệch giữa giá trị đặt và giá trị đo được của hệ thống. Cách tiếp cận này cho phép hệ thống liên tục điều chỉnh để đạt được trạng thái mong muốn.
 
-        - *Thành phần tỉ lệ (P)*: phản ứng theo sai số tức thời.
-        - *Thành phần tích phân (I)*: tích lũy sai số theo thời gian nhằm loại bỏ sai số tĩnh.
-        - *Thành phần đạo hàm (D)*: dự đoán xu hướng thay đổi của sai số để giảm dao động.
+       Bộ điều khiển PID bao gồm ba thành phần chính:
+        - *Thành phần tỉ lệ (P):* tạo ra tín hiệu điều khiển tỉ lệ với sai số tức thời, giúp hệ thống phản ứng nhanh với sự thay đổi.
+        - *Thành phần tích phân (I):* tích lũy sai số theo thời gian, nhằm loại bỏ sai số xác lập và cải thiện độ chính xác lâu dài.
+        - *Thành phần đạo hàm (D):* phản ánh tốc độ biến thiên của sai số, từ đó hỗ trợ giảm dao động và cải thiện tính ổn định của hệ thống.
 
-        Công thức tổng quát trong miền thời gian:
+        Biểu thức tổng quát của bộ điều khiển trong miền thời gian được viết như sau:
 
         $ u(t) = K_p e(t) + K_i integral e(t) dif t + K_d (dif e(t))/(dif t) $
 
-        Trong đó, $e(t)$ là sai lệch giữa giá trị mong muốn và giá trị đo được, còn $K_p$, $K_i$, $K_d$ là các hệ số điều khiển. Trong thực tế, các tham số này cần được điều chỉnh (tuning) để đạt đáp ứng mong muốn như thời gian ổn định ngắn, độ vượt quá nhỏ và sai số xác lập thấp.
+        Trong đó:
+        - $e(t)$ là sai lệch giữa giá trị mong muốn và giá trị đo được
+        - $K_p$, $K_i$, $K_d$ là các hệ số điều khiển. 
+        
+        Các tham số này cần được hiệu chỉnh phù hợp để đảm bảo hệ thống đạt được các đặc tính đáp ứng mong muốn như thời gian xác lập ngắn, độ vượt quá nhỏ và sai số xác lập thấp.
+
+        Trong quá trình triển khai thực tế, một vấn đề cần được xem xét là hiện tượng *integral windup*. Hiện tượng này xảy ra khi tín hiệu điều khiển bị giới hạn bởi các ràng buộc vật lý, trong khi _thành phần tích phân_ vẫn tiếp tục tích lũy sai số, dẫn đến đáp ứng vượt mức khi hệ thống trở lại vùng hoạt động bình thường. Để khắc phục, có thể áp dụng một số kỹ thuật như giới hạn giá trị tích phân (anti-windup clamping), tạm dừng tích lũy khi đầu ra bị bão hòa, hoặc hiệu chỉnh lại thành phần tích phân dựa trên tín hiệu điều khiển thực tế.
 

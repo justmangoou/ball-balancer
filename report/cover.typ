@@ -18,21 +18,33 @@
             *THỰC HÀNH VÀ XÂY DỰNG ROBOT 2*
         ])
         
-        #set text(14pt)
+        #set text(16pt)
         #v(0.5cm)
         *Đề tài:*  
         Robot cân bằng bóng trên mặt phẳng
         
-        #v(2cm)
-        *Sinh viên thực hiện:*  
-        
-        Nguyễn Hoàng Tuấn — MSV: 24022923 
+        #set text(14pt)
+        #v(0.5cm)
+        #table(
+            columns: (0.7fr, 0.7fr),
+            inset: 10pt,
+            align: left + horizon,
+            stroke: none,
 
-        Đỗ Minh — MSV: 24022889  
+            [*Giảng viên hướng dẫn:*],
+            [Đặng Anh Việt \ Nguyễn Quốc Bảo],
 
-        #v(3cm)
+            [*Sinh viên thực hiện:*],
+            [Nguyễn Hoàng Tuấn - 24022923 \ Đỗ Minh - 24022889],
+
+            [*Lớp:*],
+            [K69E-RE1],
+
+            [*Lớp học phần*],
+            [RBE2022 2]
+        )
+
+        #v(0.5cm)
         *Hà Nội — 2026*
-
-        #v(1cm)
     ]
 ]

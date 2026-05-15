@@ -1,5 +1,5 @@
 #import "@preview/fletcher:0.5.8": diagram, node, edge
-#import "constants.typ": HEARTBEAT_TIMER, HEARTBEAT_INTERVAL, ACTUATOR_TIMER, ACTUATOR_INTERVAL
+#import "constants.typ": HEARTBEAT_TIMER, HEARTBEAT_INTERVAL, HEARTBEAT_FREQUENCY, ACTUATOR_TIMER, ACTUATOR_INTERVAL, ACTUATOR_FREQUENCY
 
 = Thiết kế và triển khai hệ thống
     == Thiết kế tổng thể
@@ -24,6 +24,7 @@
                 node((0,2), [Driver], name: <driver>, corner-radius: 2pt),
                 node((0,3), [Động cơ bước], name: <motor>, corner-radius: 2pt),
                 node((0,4), [Mặt phẳng], name: <plate>, corner-radius: 2pt),
+                node((1,4), [Bóng], name: <ball>, corner-radius: 2pt),
 
                 // Left labels
                 node((-2,0), [*Khối cảm biến*], name: <lsensor>),
@@ -35,9 +36,10 @@
                 edge(<controller>, <driver>, "-|>"),
                 edge(<driver>, <motor>, "-|>"),
                 edge(<motor>, <plate>, "-|>"),
+                edge(<plate>, <ball>, "-|>"),
 
                 // Feedback
-                edge(<plate>, (1,4), (1,0), <sensor>, "-|>")[Phản hồi],
+                edge(<ball>, (1,3), (1,0), <sensor>, "-|>")[Vị trí],
 
                 // Group connectors (no arrow)
                 edge(<lsensor>, <sensor>, "-"),
@@ -62,12 +64,12 @@
                     caption: [Thông số kỹ thuật STM32F411CEU6],
                     table(
                         columns: (1fr, 1fr),
-                        inset: 10pt,
+                        inset: 7pt,
                         align: left + horizon,
                         stroke: 0.5pt + black,
             
                         [*Nhân*],                    
-                        [ARM 32-bit Cortex-M4 với FPU],
+                        [ARM 32-bit Cortex-M4],
 
                         [*Tốc độ xung nhịp tối đa*], 
                         [100 MHz],
@@ -90,7 +92,7 @@
                 )
 
                 #figure(
-                    image("assets/STM32F411CEU6-pinout.png", width: 340pt),
+                    image("assets/STM32F411CEU6-pinout.png", width: 75%),
                     caption: [Sơ đồ chân của STM32F411CEU6 (Blackpill)],
                 )
 
@@ -101,7 +103,7 @@
                     caption: [Thông số kỹ thuật màn cảm ứng điện trở],
                     table(
                         columns: (1fr, 1fr),
-                        inset: 10pt,
+                        inset: 7pt,
                         align: left + horizon,
                         stroke: 0.5pt + black,
 
@@ -114,7 +116,7 @@
                 )
 
                 #figure(
-                    image("assets/resistive-touch.png", width: 180pt),
+                    image("assets/resistive-touch.png", width: 50%),
                     caption: [Màn hình cảm ứng điện trở 9"],
                 )
                 #linebreak()
@@ -127,7 +129,7 @@
                     caption: [Thông số kỹ thuật driver TMC2208],
                     table(
                         columns: (1fr, 1fr),
-                        inset: 10pt,
+                        inset: 7pt,
                         align: left + horizon,
                         stroke: 0.5pt + black,
             
@@ -149,59 +151,64 @@
                 )
 
                 #figure(
-                    image("assets/TMC2208-pinout.png", width: 180pt),
+                    image("assets/TMC2208-pinout.png", width: 50%),
                     caption: [Sơ đồ chân cắm mạch điều khiển động cơ bước TMC2208],
                 ) 
                 #linebreak()
 
             ==== Động cơ bước 17HS4401S
-                *Động cơ bước 17HS4401S (chuẩn NEMA 17)* là loại động cơ bước hai pha (bipolar) được sử dụng phổ biến trong các ứng dụng yêu cầu độ chính xác và độ ổn định cao. Với góc bước nhỏ và mô-men xoắn giữ tương đối lớn, động cơ cho phép thực hiện các chuyển động chính xác và ổn định trong quá trình vận hành.
+                *Động cơ bước 17HS4401S (chuẩn NEMA 17)* là động cơ bước hai pha (bipolar) được sử dụng phổ biến trong các hệ thống yêu cầu độ chính xác và độ ổn định cao. Động cơ có góc bước cơ bản nhỏ và mô-men giữ tương đối lớn.
 
                 #figure(
                     caption: [Thông số kỹ thuật động cơ bước 17HS4401S],
                     table(
                         columns: (1fr, 1fr),
-                        inset: 10pt,
+                        inset: 7pt,
                         align: left + horizon,
                         stroke: 0.5pt + black,
 
-                        [*Góc bước cơ bản*], [$1.8 degree plus.minus 0.09 degree$],
+                        [*Góc bước cơ bản*], 
+                        [$1.8 degree plus.minus 0.09 degree$],
 
-                        [*Kích thước mặt bích*], [$42.3 times 42.3$ mm],
+                        [*Kích thước mặt bích*], 
+                        [$42.3 times 42.3$ mm],
 
-                        [*Dòng điện định mức*], [$1.5A$ / pha],
+                        [*Dòng điện định mức*], 
+                        [$1.5A$ / pha],
 
-                        [*Mô-men xoắn giữ*], [$40 N dot$ cm],
+                        [*Mô-men xoắn giữ*], 
+                        [$40 N dot$ cm],
 
-                        [*Khối lượng*], [$~300$ g],
+                        [*Khối lượng*], 
+                        [$~300$ g],
                     )
                 )
 
                 #figure(
-                    image("assets/17HS4401S.png", width: 180pt),
+                    image("assets/17HS4401S.png", width: 36%),
                     caption: [Động cơ bước 17HS4401S],
                 )
                 #linebreak()
                 #figure(
-                    image("assets/17HS4401S-blueprint.png", width: 360pt),
+                    image("assets/17HS4401S-blueprint.png", width: 75%),
                     caption: [Bản vẽ kỹ thuật động cơ bước 17HS4401S],
                 )
                 #linebreak()
             
             ==== Module hạ áp LM2596
                 *Module hạ áp DC-DC LM2596 (tích hợp vôn kế)* là bộ chuyển đổi điện áp một chiều có khả năng hạ điện áp đầu vào xuống mức thấp hơn, hoạt động theo nguyên lý chuyển mạch tần số cao, cho hiệu suất chuyển đổi cao. Module được tích hợp màn hình LED và vi điều khiển đo điện áp, giúp giám sát trực tiếp điện áp đầu vào/đầu ra trong quá trình vận hành với độ chính xác khoảng $plus.minus 0.05V$. Điện áp đầu ra có thể thay đổi thông qua việc điều chỉnh biến trở tích hợp trên module.
-
-                #v(4.6em)
+                
+                #pagebreak() // CHECK: may break
                 #figure(
                     caption: [Thông số kỹ thuật module hạ áp DC-DC LM2596],
                     table(
-                        columns: (1fr, 1.75fr),
-                        inset: 10pt,
+                        columns: (1.2fr, 2.25fr),
+                        inset: 7pt,
                         align: left + horizon,
                         stroke: 0.5pt + black,
             
                         [*Điện áp đầu vào $V_"in"$*],                    
-                        [$4.0V$ đến $40V$ \ (Vôn kế hoạt động ổn định khi $V_"in" > 4.5V$)],
+                        [$4.0V$ đến $40V$ \ (Vôn kế hoạt động khi $V_"in" > 4.5V$)],
                         
                         [*Điện áp đầu ra $V_"out"$*],                    
                         [$1.25V$ đến $37V$ \ (Điều chỉnh bằng biến trở)],
@@ -210,7 +217,7 @@
                         [$2.0A$ RMS \ (Tối đa $~3.0A$ với tản nhiệt)],
 
                         [*Công suất đầu ra tối đa*],
-                        [$20 W$ \ (Khuyến nghị tản nhiệt khi công suất lớn hơn $15 W$)],
+                        [$20 W$ \ Tản nhiệt nếu P > 15W],
 
                         [*Hiệu suất chuyển đổi*],
                         [$~ 88%$],
@@ -221,16 +228,17 @@
                 )
 
                 #figure(
-                    image("assets/LM2596.png", width: 140pt),
+                    image("assets/LM2596.png", width: 30%),
                     caption: [Module hạ áp DC-DC LM2596 (tích hợp vôn kế)],
                 )
                 #linebreak()
+                
             ==== Linh kiện phụ trợ
                 #figure(
                     caption: [Danh sách các linh kiện phụ trợ],
                     table(
                     columns: (1fr, 1fr),
-                    inset: 10pt,
+                    inset: 7pt,
                     align: left + horizon,
                     stroke: 0.5pt + black,
                     
@@ -254,7 +262,7 @@
             #v(0.7em)
 
             #figure(
-                image("assets/board.png", width: 100%),
+                image("assets/board.png", width: 75%),
                 caption: [Sơ đồ kết nối tổng thể giữa vi điều khiển, driver động cơ và các khối chức năng],
             )
             #pagebreak()
@@ -264,8 +272,8 @@
 
             #figure(
                 table(
-                    columns: (1fr, 1fr, 1.2fr, 1fr),
-                    inset: 10pt,
+                    columns: (1.5fr, 0.55fr, 0.6fr, 1.5fr),
+                    inset: 7pt,
                     align: left + horizon,
                     stroke: 0.5pt + black,
                     fill: (x, y) => if y == 0 { gray.lighten(80%) },
@@ -302,10 +310,11 @@
             
             Đối với màn cảm ứng điện trở, các chân được cấu hình linh hoạt giữa chế độ GPIO và ADC để thực hiện việc đo tọa độ, theo nguyên lý hoạt động đã trình bày tại @resistive_touch_mechanism.
 
+            #v(1em)
             #figure(
                 table(
-                    columns: (1fr, 1fr),
-                    inset: 10pt,
+                    columns: (0.5fr, 1fr),
+                    inset: 7pt,
                     align: left + horizon,
                     stroke: 0.5pt + black,
                     fill: (x, y) => if y == 0 { gray.lighten(80%) },
@@ -336,6 +345,18 @@
         #pagebreak()
 
     == Thiết kế cơ khí
+        #figure(
+            image("assets/3d-design.png", width: 55%),
+            caption: [Mô hình 3D thiết kế cơ khí],
+        )
+
+        #v(1em)
+
+        #figure(
+            image("assets/technical-drawing.png", width: 100%),
+            caption: [Bản vẽ kỹ thuật]
+        )
+
         #pagebreak()
     == Kiến trúc phần mềm 
         === Công cụ phát triển
@@ -349,23 +370,22 @@
 
             - #link("https://cmake.org/")[*CMake*]: công cụ tạo hệ thống biên dịch, dùng để cấu hình và sinh các tệp phục vụ quá trình biên dịch và liên kết chương trình (ví dụ: Makefile, Ninja).
 
-        === Cấu hình hệ thống
-            // TODO: Make this pro
-            Hệ thống sử dụng nguồn xung nhịp ngoại HSE với tần số 25 MHz. Thông qua bộ nhân tần PLL với các tham số cấu hình $M=25$, $N=200$ và $P=2$, vi điều khiển đạt được tần số hoạt động trung tâm (SYSCLK) lên đến 100 MHz. 
+        === Cấu hình xung nhịp hệ thống
+            Hệ thống sử dụng nguồn xung nhịp ngoài HSE với tần số 25 MHz. Thông qua bộ nhân tần PLL với các tham số cấu hình $M=25$, $N=200$ và $P=2$, vi điều khiển đạt xung nhịp hệ thống (SYSCLK) 100 MHz.
+
+            Các tham số này được lựa chọn nhằm đảm bảo các điều kiện hoạt động tối ưu của PLL: hệ số $M=25$ đưa tần số đầu vào của PLL về 1 MHz (thuộc trong dải khuyến nghị), hệ số $N=200$ tạo tần số VCO đạt 200 MHz (thuộc dải hoạt động cho phép), và hệ số $P=2$ chia tần số này xuống 100 MHz, tương ứng với tần số tối đa của hệ thống.
 
             #figure(
-                image("assets/clock-config.png", width: 100%),
+                image("assets/clock-config.png", width: 75%),
                 caption: [Cấu hình xung nhịp hệ thống],
             )
 
-            Cấu hình này cung cấp hiệu suất xử lý cao cho các bus ngoại vi:
-            - HCLK (AHB bus): 100 MHz.
-            - PCLK1 (APB1): 50 MHz (Timer đạt 100 MHz).
-            - PCLK2 (APB2): 100 MHz.
-
-            Tốc độ này đảm bảo khả năng đáp ứng thời gian thực cho việc đọc dữ liệu cảm biến, thực hiện các thuật toán điều khiển phức tạp và phát xung PWM điều khiển động cơ với độ chính xác cao. 
+            Cấu hình này đảm bảo hiệu năng xử lý đủ cao cho các tác vụ thời gian thực, bao gồm thu thập dữ liệu cảm biến, xử lý thuật toán điều khiển và phát xung điều khiển động cơ với độ chính xác cao: 
+            - _HCLK (AHB bus):_ 100 MHz.
+            - _PCLK1 (APB1):_ 50 MHz (Timer đạt 100 MHz).
+            - _PCLK2 (APB2):_ 100 MHz.
             
-            Ngoài ra, bộ đếm chu kỳ DWT tích hợp trong lõi ARM Cortex-M được khai thác để tạo các hàm trễ với độ chính xác mức micro giây ($mu s$), giúp tối ưu hóa việc đồng bộ hóa và quản lý thời gian trong hệ thống.
+            Ngoài ra, bộ đếm chu kỳ DWT (Data Watchpoint and Trace) được sử dụng để xây dựng các hàm trễ chính xác ở mức micro giây ($mu s$), hỗ trợ đồng bộ hóa và điều khiển thời gian trong hệ thống.
 
         === Thiết lập Timer
             ==== Timer điều khiển (#HEARTBEAT_TIMER)
@@ -373,11 +393,9 @@
 
                 Cấu hình:
                 - Prescaler: $"PSC" = 99$
-                - Auto-reload: $"ARR" = 999$
+                - Auto-reload: $"ARR" = 4999$
                 
-                #align(center)[
-                    $f = (100 "Mhz")/(("PSC" + 1)("ARR" + 1)) = (100 times 10^6)/(100 times 1000) = 1 "kHz"$
-                ]
+                $ f = (100 "Mhz")/(("PSC" + 1)("ARR" + 1)) = (100 times 10^6)/(100 times 5000) = #HEARTBEAT_FREQUENCY $
 
                 #v(0.5em)
                 Tương ứng với chu kỳ #HEARTBEAT_INTERVAL.
@@ -389,8 +407,7 @@
                 - Prescaler: $"PSC" = 99$
                 - Auto-reload: $"ARR" = 24$
                 
-                #align(center)[
-                    $f = (100 "Mhz")/(("PSC" + 1)("ARR" + 1)) = (100 times 10^6)/(100 times 25) = 40 "kHz"$
-                ]
+                $ f = (100 "Mhz")/(("PSC" + 1)("ARR" + 1)) = (100 times 10^6)/(100 times 25) = #ACTUATOR_FREQUENCY $
+                
                 #v(0.5em)
                 Tương ứng với chu kỳ #ACTUATOR_INTERVAL.

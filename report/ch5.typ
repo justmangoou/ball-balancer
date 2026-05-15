@@ -1,5 +1,3 @@
-= Kết quả, đánh giá và kết luận
+= Kết quả và đánh giá
     == Kết quả
     == Đánh giá
-    == Hạn chế
-    == Hướng phát triển

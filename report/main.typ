@@ -1,5 +1,5 @@
 #set text(font: "Times New Roman", 13pt)
-#set list(indent: 3em)
+#set list(indent: 2em)
 
 #set page(
   numbering: "1",
@@ -27,7 +27,7 @@
 #set heading(numbering: "1.")
 
 #show heading.where(level: 1): it => {
-  let front_matter_text = ([COVER], [Mục lục], [Danh mục hình], [Danh mục bảng], [Danh mục ký hiệu và từ viết tắt])
+  let front_matter_text = ([COVER], [Mục lục], [Danh mục hình], [Danh mục bảng], [Danh mục ký hiệu và từ viết tắt], [Tài liệu tham khảo], [Phụ lục])
 
   if front_matter_text.contains(it.body) {
     set align(center)
@@ -65,7 +65,7 @@
     } else if it.kind == raw {
       [Đoạn mã #fig_num: #it.body]
     } else if it.kind == table {
-      [Bảng #fig_num: #it.body]
+      [#emph[Bảng #fig_num: #it.body]]
     }
   }
 }
@@ -82,7 +82,7 @@
 })
 
 #show figure.where(kind: table).or(figure.where(kind: raw)): it => [
-  #set align(left)
+  #set align(center)
   #set par(first-line-indent: 0pt)
   #v(it.gap)
   #it.caption
@@ -136,6 +136,9 @@
 #counter(heading).update(0)
 #show link: underline
 
+#show table: set block(width: 75%)
+#show table: align.with(center)
+
 // ===== Main Content =====
 #include "ch1.typ"
 #pagebreak()
@@ -147,3 +150,14 @@
 #pagebreak()
 #include "ch5.typ"
 #pagebreak()
+#include "ch6.typ"
+#pagebreak()
+
+#bibliography(
+  "list_of_citations.yml",
+  title: "Tài liệu tham khảo", full: true
+)
+#pagebreak()
+
+#heading(numbering: none)[Phụ lục]
+#include "appendix.typ"

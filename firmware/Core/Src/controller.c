@@ -156,9 +156,10 @@ static float prv_theta_compute(const Leg leg, const float hz, const float nx, co
 
   const float inv_mag = 1.0f / mag;
 
-  float ratio_acos2 = (mag_sq + ARM_DIFF_SQ) * inv_mag * INV_ARM_L_X2;
   float ratio_acos1 = joint_y * inv_mag;
+  float ratio_acos2 = (mag_sq + ARM_DIFF_SQ) * inv_mag * INV_ARM_L_X2;
 
+  // Arccos/Arcsin input should be in [-1,1]
   ratio_acos1 = clampf(ratio_acos1, -1.0f, 1.0f);
   ratio_acos2 = clampf(ratio_acos2, -1.0f, 1.0f);
 
