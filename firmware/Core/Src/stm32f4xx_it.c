@@ -232,7 +232,7 @@ void TIM5_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM5_IRQn 0 */
   static uint16_t count = 0;
-  if (++count >= 500) {
+  if (++count >= 100) {
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     count = 0;
   }

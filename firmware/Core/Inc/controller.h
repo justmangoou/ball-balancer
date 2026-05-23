@@ -4,13 +4,14 @@
 #include "stepper_driver.h"
 #include "resistive_touch.h"
 
+
 #define ORIGIN_ANGLE       206.662752199f
 #define LEG_COUNT          3
 
-#define BASE_RADIUS        0
-#define PLATFORM_RADIUS    0
-#define ARM_LENGTH         0
-#define ROD_LENGTH         0
+#define BASE_RADIUS        50.0f
+#define PLATFORM_RADIUS    85.0f
+#define ARM_LENGTH         44.4f
+#define ROD_LENGTH         98.175f
 
 // Precalculation
 #define ARM_L_SQ           (ARM_LENGTH * ARM_LENGTH)
@@ -35,7 +36,7 @@ typedef struct {
 static const LegInfo LEGS[3] = {
     {0.000000000f,  1.00000000f,  0.000000000f}, // Leg A: 0 rad
     {2.094395102f, -0.50000000f,  0.866025404f}, // Leg B: 2π/3
-    {4.188790205f, -0.50000000f, -0.866025404f}  // Leg C: 4π/3
+    {4.188790205f, -0.50000000f, -0.866025404f}, // Leg C: 4π/3
 };
 
 typedef struct {
@@ -49,5 +50,6 @@ typedef struct {
 void Controller_Init(void);
 void Controller_Update(Touch_CenterOffsetPercentage *offset);
 void Controller_Reset(void);
+void Controller_Test(void);
 
 #endif //FIRMWARE_CONTROLLER_H

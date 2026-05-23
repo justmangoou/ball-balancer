@@ -4,10 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define TOUCH_X_MIN          400.0f
-#define TOUCH_X_MAX          3750.0f
-#define TOUCH_Y_MIN          875.0f
-#define TOUCH_Y_MAX          3350.0f
+#define TOUCH_X_MIN          240.0f
+#define TOUCH_X_MAX          3869.0f
+#define TOUCH_Y_MIN          510.0f
+#define TOUCH_Y_MAX          3555.0f
 
 #define X_POS_ADC_CHANNEL    ADC_CHANNEL_1
 #define Y_POS_ADC_CHANNEL    ADC_CHANNEL_2

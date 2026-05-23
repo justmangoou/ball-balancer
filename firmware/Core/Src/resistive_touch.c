@@ -10,14 +10,14 @@
 extern ADC_HandleTypeDef hadc1;
 static ADC_ChannelConfTypeDef sConfig_read = {0};
 
-static void prv_read_x(uint16_t *samples, int n);
-static void prv_read_y(uint16_t *samples, int n);
+static void prv_read_x(uint16_t *samples, uint8_t n);
+static void prv_read_y(uint16_t *samples, uint8_t n);
 static uint16_t prv_read_z(uint16_t x_raw);
 
 static uint16_t prv_read_single(uint32_t channel);
-static void prv_read_samples(uint32_t channel, uint16_t *samples, int n);
+static void prv_read_samples(uint32_t channel, uint16_t *samples, uint8_t n);
 
-static uint16_t prv_get_median(uint16_t arr[], int n);
+static uint16_t prv_get_median(uint16_t arr[], uint8_t n);
 
 void Touch_Init(void) {
   sConfig_read.Rank = 1;
@@ -56,7 +56,7 @@ uint8_t Touch_CenterOffsetPercent(const Touch_RawPoint *raw_point, Touch_CenterO
   return 1;
 }
 
-static void prv_read_x(uint16_t *samples, int n) {
+static void prv_read_x(uint16_t *samples, uint8_t n) {
   GPIO_SetPinMode(TOUCH_X_POS_GPIO_Port, TOUCH_X_POS_Pin, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL);
   HAL_GPIO_WritePin(TOUCH_X_POS_GPIO_Port, TOUCH_X_POS_Pin, GPIO_PIN_SET);
   GPIO_SetPinMode(TOUCH_X_NEG_GPIO_Port, TOUCH_X_NEG_Pin, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL);
@@ -70,7 +70,7 @@ static void prv_read_x(uint16_t *samples, int n) {
   prv_read_samples(Y_POS_ADC_CHANNEL, samples, n);
 }
 
-static void prv_read_y(uint16_t *samples, int n) {
+static void prv_read_y(uint16_t *samples, uint8_t n) {
   GPIO_SetPinMode(TOUCH_Y_POS_GPIO_Port, TOUCH_Y_POS_Pin, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL);
   HAL_GPIO_WritePin(TOUCH_Y_POS_GPIO_Port, TOUCH_Y_POS_Pin, GPIO_PIN_SET);
   GPIO_SetPinMode(TOUCH_Y_NEG_GPIO_Port, TOUCH_Y_NEG_Pin, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL);
@@ -98,7 +98,7 @@ static uint16_t prv_read_z(uint16_t x_raw) {
   const uint16_t z1 = prv_read_single(X_POS_ADC_CHANNEL);
   const uint16_t z2 = prv_read_single(Y_NEG_ADC_CHANNEL);
 
-  if (z1 == 0) return 0;
+  if (z2 <= z1 || z1 == 0) return 0;
 
   /* * The Compensated Formula:
    * R_touch = (X_plate_resistance) * (x_raw / 4096) * ((z2 / z1) - 1)
@@ -122,7 +122,7 @@ static void prv_setup_read(uint32_t channel) {
   DWT_Delay_us(10);
 }
 
-static uint16_t prv_read_single(const uint32_t channel) {
+static uint16_t  prv_read_single(const uint32_t channel) {
   prv_setup_read(channel);
 
   HAL_ADC_Start(&hadc1);
@@ -132,7 +132,7 @@ static uint16_t prv_read_single(const uint32_t channel) {
   return result;
 }
 
-static void prv_read_samples(const uint32_t channel, uint16_t *samples, const int n) {
+static void prv_read_samples(const uint32_t channel, uint16_t *samples, const uint8_t n) {
   prv_setup_read(channel);
 
   for (int i = 0; i < n; i++) {
@@ -160,7 +160,7 @@ static void prv_read_samples(const uint32_t channel, uint16_t *samples, const in
 * - Operates in-place (input array will be reordered)
 * - Intended for embedded use (e.g., small median filters)
 */
-static uint16_t prv_get_median(uint16_t arr[], int n) {
+static uint16_t prv_get_median(uint16_t arr[], uint8_t n) {
   if (n <= 0) return 0;
 
   for (int32_t i = 1; i < n; i++) {

@@ -17,10 +17,6 @@ float map_clampedf(
     assert(out_min < out_max);
 
     const float in_range = in_max - in_min;
-
-    if (in_range == 0.0f)
-        return (out_min + out_max) * 0.5f; // Midpoint
-
     const float t = (in - in_min) / in_range;
     const float out = out_min + t * (out_max - out_min);
 

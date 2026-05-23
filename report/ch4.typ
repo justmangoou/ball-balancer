@@ -35,7 +35,7 @@
 
             $ x_"pct", y_"pct" in [-100, 100] $
 
-            Các ngưỡng $X_"min"$, $X_"max"$, $Y_"min"$, $Y_"max"$ được xác định thông qua quá trình hiệu chuẩn thực nghiệm. Cụ thể, hệ thống ghi nhận giá trị ADC khi điểm chạm được đưa tới các vị trí biên của bề mặt cảm ứng tại 4 góc, từ đó xác định giá trị nhỏ nhất và lớn nhất theo từng trục. Các giá trị này sau đó được sử dụng làm mốc để chuẩn hóa tọa độ.
+            Các ngưỡng $X_"min"$, $X_"max"$, $Y_"min"$, $Y_"max"$ được xác định thông qua quá trình hiệu chuẩn thực nghiệm. Cụ thể, hệ thống ghi nhận giá trị ADC khi điểm chạm được đưa tới các vị trí biên của bề mặt cảm ứng tại 4 góc, từ đó xác định giá trị nhỏ nhất và lớn nhất theo từng trục. 
 
         === Mất tín hiệu
             Nếu tín hiệu từ cảm biến không hợp lệ (ví dụ: không phát hiện tiếp xúc, tiếp xúc không ổn định hoặc nhiễu vượt ngưỡng) vượt quá ngưỡng #MISS_THRESHOLD chu kỳ (tương đương #{HEARTBEAT_INTERVAL_MS * MISS_THRESHOLD} ms), hệ thống sẽ xác nhận mất tín hiệu, chuyển sang trạng thái “không tìm thấy” và đặt các giá trị phản hồi về $0$ nhằm tránh sử dụng dữ liệu không đáng tin cậy trong điều khiển.
@@ -43,7 +43,7 @@
     == Thuật toán điều khiển PID
         Sau khi xác định được vị trí chuẩn hóa của quả bóng $(x_"pct", y_"pct")$, hệ thống dùng hai bộ điều khiển PID độc lập cho hai trục $x$ và $y$ để tính giá trị điều khiển tương ứng với độ nghiêng của mặt phẳng. Nguyên lý tổng quát của thuật toán được trình bày trong @pid_control_algorithm.
 
-        Thuật toán được thực thi trong cùng một hàm ngắt #HEARTBEAT_TIMER với chu kỳ #HEARTBEAT_INTERVAL, do đó mỗi bước lấy mẫu có $Delta t = 1 m s$.
+        Thuật toán được thực thi trong cùng một hàm ngắt #HEARTBEAT_TIMER với chu kỳ #HEARTBEAT_INTERVAL, do đó mỗi bước lấy mẫu có $Delta t = #HEARTBEAT_INTERVAL$.
 
         Trong phạm vi của báo cáo, điểm đặt (setpoint) của thuật toán PID được chọn là $0$ (tương ứng với tâm của mặt phẳng).
 
@@ -69,7 +69,7 @@
             Tổng hợp lại, tín hiệu điều khiển được xác định bởi:
             $ u[k] = K_p dot e[k] + K_i dot I[k] + K_d dot D[k] $
 
-        === Giới hạn đầu ra và chuyển sang lệnh nghiêng
+        === Giới hạn đầu ra
             Tín hiệu điều khiển của mỗi trục được giới hạn trong một khoảng xác định nhằm tránh yêu cầu góc nghiêng vượt quá khả năng cơ khí và đảm bảo tính ổn định của hệ thống. Các giá trị điều khiển này được diễn giải như độ dốc của mặt phẳng theo hai trục $x$ và $y$.
             
             Theo thiết kế này, các giá trị $u_x$ và $u_y$ được ràng buộc trong khoảng $[-#PID_OUTPUT_LIMIT, #PID_OUTPUT_LIMIT]$.

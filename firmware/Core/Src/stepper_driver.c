@@ -2,6 +2,14 @@
 
 #include <stdlib.h>
 
+void Stepper_Enable(void) {
+  HAL_GPIO_WritePin(LEG_ENABLE_GPIO_Port, LEG_ENABLE_Pin, GPIO_PIN_RESET);
+}
+
+void Stepper_Disable(void) {
+  HAL_GPIO_WritePin(LEG_ENABLE_GPIO_Port, LEG_ENABLE_Pin, GPIO_PIN_SET);
+}
+
 Stepper *Stepper_New(GPIO_TypeDef *step_port, uint16_t step_pin, GPIO_TypeDef *dir_port, uint16_t dir_pin) {
   Stepper *stepper = malloc(sizeof(Stepper));
   if (stepper == NULL) return NULL;
@@ -21,7 +29,7 @@ Stepper *Stepper_New(GPIO_TypeDef *step_port, uint16_t step_pin, GPIO_TypeDef *d
 
 void Stepper_MoveTo(Stepper *stepper, const int32_t target_pos, const float velocity) {
   stepper->target_pos = target_pos;
-  stepper->velocity = velocity > 1.0f ? 1.0f : velocity;
+  stepper->velocity = velocity;
 }
 
 void Stepper_Process(Stepper *stepper) {
@@ -32,11 +40,11 @@ void Stepper_Process(Stepper *stepper) {
 
   stepper->accumulator += stepper->velocity;
 
-  // 2. Is the bucket full? (Did we reach 1.0 steps?)
-  if (stepper->accumulator >= 1.0f) {
-    stepper->accumulator -= 1.0f; // Empty 1 step from the bucket
+  // Process all complete steps that have accumulated
+  while (stepper->accumulator >= 1.0f && stepper->current_pos != stepper->target_pos) {
+    stepper->accumulator -= 1.0f;
 
-    // 3. Set Direction
+    // Set Direction
     if (stepper->target_pos > stepper->current_pos) {
       stepper->dir_port->BSRR = stepper->dir_pin;
       stepper->current_pos++;
@@ -45,7 +53,9 @@ void Stepper_Process(Stepper *stepper) {
       stepper->current_pos--;
     }
 
-    // 4. Atomic Step Pulse
+    for (volatile int d = 0; d < 10; d++) { __asm("nop"); }
+
+    // Atomic Step Pulse
     stepper->step_port->BSRR = stepper->step_pin;
     for (volatile int d = 0; d < 40; d++) { __asm("nop"); }
     stepper->step_port->BSRR = (uint32_t) stepper->step_pin << 16;

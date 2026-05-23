@@ -13,10 +13,10 @@ Stepper* LEG_STEPPER_CONTROLLER[3] = { NULL };
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+extern float x_out, y_out;
 
 static bool is_first_update = true;
-
-volatile float x_out, y_out;
+volatile float times;
 
 static void prv_move(float nx, float ny);
 static float prv_pid_compute(PID_Controller *pid, float setpoint, float measured, float dt);
@@ -34,6 +34,13 @@ void Controller_Init(void) {
   ) {
     Error_Handler();
   }
+
+  Stepper_Enable();
+  Controller_Reset();
+}
+
+void Controller_Test(void) {
+  Stepper_MoveTo(LEG_STEPPER_CONTROLLER[LEG_A], 200, 0.025f);
 }
 
 void Controller_Update(Touch_CenterOffsetPercentage *offset) {
@@ -64,15 +71,15 @@ static void prv_move(const float nx, const float ny) {
   for (uint8_t i = 0; i < LEG_COUNT; i++) {
     Stepper *s = LEG_STEPPER_CONTROLLER[i];
 
-    const int32_t new_target = lroundf(ORIGIN_ANGLE - prv_theta_compute(i, -4.25f, nx, ny));
+    const int32_t new_target = lroundf((ORIGIN_ANGLE - prv_theta_compute(i, 57.74f, nx, ny)) * ANGLE_TO_STEP);
 
     /* VELOCITY CALCULATION (Bresenham/Accumulator)
-       We want to reach the new target within 1 Heartbeat (1ms).
-       If Muscle Timer is 40kHz, we have 40 ticks per Heartbeat.
+       We want to reach the new target within 1 Heartbeat (5ms).
+       If Muscle Timer is 40kHz, we have 200 ticks per Heartbeat.
        Velocity = Distance / Ticks
     */
     const float dist = (float) abs(new_target - s->current_pos);
-    const float velocity = dist / 40.0f; // 40.0f is MUSCLE_FREQ / HEARTBEAT_FREQ
+    const float velocity = dist / 200.0f; // 200.0f is MUSCLE_FREQ / HEARTBEAT_FREQ
 
     Stepper_MoveTo(s, new_target, velocity);
   }

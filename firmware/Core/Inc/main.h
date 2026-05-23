@@ -70,7 +70,7 @@ void GPIO_SetPinMode(GPIO_TypeDef* port, uint16_t pin, uint32_t mode, uint32_t p
 #define TOUCH_Y_NEG_Pin GPIO_PIN_4
 #define TOUCH_Y_NEG_GPIO_Port GPIOA
 #define LEG_ENABLE_Pin GPIO_PIN_12
-#define LEG_ENABLE_GPIO_Port GPIOA
+#define LEG_ENABLE_GPIO_Port GPIOB
 #define LEG_A_DIR_Pin GPIO_PIN_15
 #define LEG_A_DIR_GPIO_Port GPIOA
 #define LEG_A_STEP_Pin GPIO_PIN_3
@@ -97,7 +97,7 @@ void GPIO_SetPinMode(GPIO_TypeDef* port, uint16_t pin, uint32_t mode, uint32_t p
 #define LEG_C_TIM            TIM4
 #define LEG_C_TIM_CHANNEL    TIM_CHANNEL_2
 #define HEARTBEAT_TIM        TIM5
-#define HEARTBEAT_DELTA_TIME 0.001f
+#define HEARTBEAT_DELTA_TIME 0.005f
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

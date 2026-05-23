@@ -21,6 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+
 #include "controller.h"
 #include "resistive_touch.h"
 #include "stepper_driver.h"
@@ -33,6 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,6 +49,8 @@ ADC_HandleTypeDef hadc1;
 TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim9;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
 static uint32_t hclk_mhz;
 static uint32_t last_tick;
@@ -54,6 +59,8 @@ static uint32_t last_tick;
 volatile uint16_t x_raw, y_raw;
 volatile float x_parc, y_parc;
 volatile uint16_t pressure;
+
+volatile float x_out, y_out;
 #endif
 
 volatile bool err_occurred = false;
@@ -65,6 +72,7 @@ static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_TIM9_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 static void DWT_Init(void);
 /* USER CODE END PFP */
@@ -107,9 +115,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  // HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
   MX_ADC1_Init();
   MX_TIM5_Init();
   MX_TIM9_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   Touch_Init();
   Controller_Init();
@@ -120,11 +130,11 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
+  setvbuf(stdout, NULL, _IONBF, 0);
   while (1)
   {
     /* USER CODE END WHILE */
-
+    printf("x_parc: %.3f | y_parc: %.3f | x_out: %.3f | y_out: %.3f\n", x_parc, y_parc, x_out, y_out);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -311,6 +321,39 @@ static void MX_TIM9_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -332,14 +375,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LEG_ENABLE_GPIO_Port, LEG_ENABLE_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, LEG_ENABLE_Pin|LEG_A_STEP_Pin|LEG_B_DIR_Pin|LEG_B_STEP_Pin
+                          |LEG_C_DIR_Pin|LEG_C_STEP_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LEG_A_DIR_GPIO_Port, LEG_A_DIR_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LEG_A_STEP_Pin|LEG_B_DIR_Pin|LEG_B_STEP_Pin|LEG_C_DIR_Pin
-                          |LEG_C_STEP_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -377,15 +417,23 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+PUTCHAR_PROTOTYPE
+{
+  /* Place your implementation of fputc here */
+  /* e.g. write a character to the USART1 and Loop until the end of transmission */
+  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
+
+  return ch;
+}
+
 void DWT_Init(void) {
   SystemCoreClockUpdate();
   hclk_mhz = HAL_RCC_GetHCLKFreq() / 1000000;
 
-  if (!(CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk)) {
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-    DWT->CYCCNT = 0;
-    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-  }
+  // Force enablement directly
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
   last_tick = DWT->CYCCNT;
 }

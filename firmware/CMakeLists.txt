@@ -42,6 +42,7 @@ add_link_options(
         -mfpu=fpv4-sp-d16
         -mfloat-abi=hard
         -Wl,--gc-sections
+        -Wl,-u,_printf_float
 )
 
 # Enable CMake support for ASM and C languages
