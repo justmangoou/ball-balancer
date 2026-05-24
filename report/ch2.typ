@@ -24,8 +24,15 @@
             caption: [Cấu tạo của màn cảm ứng điện trở],
         )
 
-    == Điều khiển động cơ bước thông qua driver
-        Động cơ bước (stepper) di chuyển theo từng bước rời rạc; driver nhận các xung điều khiển (xung bước) và tín hiệu hướng để quay theo bước hoặc hướng tương ứng. Các driver phổ biến (ví dụ A4988, DRV8825) hỗ trợ microstepping để tăng độ mịn chuyển động bằng cách điều khiển dòng cuộn dây. Khi tích hợp, cần cấu hình giới hạn dòng, nối các chân `STEP`, `DIR` và `ENABLE`, và đảm bảo cấp nguồn/phân tản nhiệt cho driver để tránh quá nhiệt.
+    // TODO: fix this
+    == Cơ sở lý thuyết động cơ bước
+        Động cơ bước (stepper) chuyển động theo các bước rời rạc; mỗi xung bước tạo một bước góc xác định. Bằng cách thay đổi tần số xung bước ta điều khiển vận tốc, còn số xung tích lũy quyết định vị trí. Microstepping chia mỗi bước cơ bản thành nhiều bước nhỏ hơn bằng cách điều chỉnh dòng trên các cuộn dây, giúp tăng độ mịn và giảm rung.
+
+    == Driver điều khiển
+        Driver nhận tín hiệu điều khiển từ bộ điều khiển (chẳng hạn `STEP`, `DIR`, `ENABLE`) và cấp/dừng dòng cho cuộn dây động cơ theo trình tự phù hợp. Các driver phổ biến như A4988 hoặc DRV8825 hỗ trợ cài đặt microstepping và giới hạn dòng (current limit) để bảo vệ động cơ. Khi tích hợp, cần cấu hình giới hạn dòng, nối các chân điều khiển, và đảm bảo nguồn cùng tản nhiệt đủ để tránh quá nhiệt.
+
+    == Phương pháp điều khiển
+        Phương pháp điều khiển đơn giản nhất là gửi xung bước và thiết lập chân hướng (`DIR`) để đổi chiều quay; tốc độ được điều khiển bằng tần số xung, vị trí bằng số xung. Với microstepping, cấu hình các chân chế độ bước trên driver hoặc qua giao tiếp phù hợp. Ngoài ra, hệ thống có thể kết hợp phản hồi (encoder, cảm biến vị trí) và thuật toán điều khiển (ví dụ điều khiển đóng vòng) để cải thiện độ chính xác và độ ổn định.
 
     == Thuật toán điều khiển PID <pid_control_algorithm>
         Thuật toán điều khiển Proportional–Integral–Derivative (PID) là một phương pháp điều khiển phản hồi được sử dụng phổ biến trong các hệ thống. Trong đó tín hiệu điều khiển được xác định dựa trên sai lệch giữa giá trị đặt và giá trị đo được của hệ thống. Cách tiếp cận này cho phép hệ thống liên tục điều chỉnh để đạt được trạng thái mong muốn.
@@ -45,5 +52,4 @@
         
         Các tham số này cần được hiệu chỉnh phù hợp để đảm bảo hệ thống đạt được các đặc tính đáp ứng mong muốn như thời gian xác lập ngắn, độ vượt quá nhỏ và sai số xác lập thấp.
 
-        Trong quá trình triển khai thực tế, một vấn đề cần được xem xét là hiện tượng *integral windup*. Hiện tượng này xảy ra khi tín hiệu điều khiển bị giới hạn bởi các ràng buộc vật lý, trong khi _thành phần tích phân_ vẫn tiếp tục tích lũy sai số, dẫn đến đáp ứng vượt mức khi hệ thống trở lại vùng hoạt động bình thường. Để khắc phục, có thể áp dụng một số kỹ thuật như giới hạn giá trị tích phân (anti-windup clamping), tạm dừng tích lũy khi đầu ra bị bão hòa, hoặc hiệu chỉnh lại thành phần tích phân dựa trên tín hiệu điều khiển thực tế.
-
+        Trong quá trình triển khai thực tế, hiện tượng *integral windup* có thể xảy ra khi tín hiệu điều khiển bị giới hạn bởi các ràng buộc vật lý, trong khi thành phần tích phân vẫn tiếp tục tích lũy sai số, dẫn đến đáp ứng vượt mức khi hệ thống trở lại vùng hoạt động bình thường. Để khắc phục, có thể áp dụng một số kỹ thuật như giới hạn giá trị tích phân (anti-windup clamping), tạm dừng tích lũy khi đầu ra bị bão hòa, hoặc hiệu chỉnh lại thành phần tích phân dựa trên tín hiệu điều khiển thực tế.
