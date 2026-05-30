@@ -29,7 +29,17 @@ Stepper *Stepper_New(GPIO_TypeDef *step_port, uint16_t step_pin, GPIO_TypeDef *d
 
 void Stepper_MoveTo(Stepper *stepper, const int32_t target_pos, const float velocity) {
   stepper->target_pos = target_pos;
-  stepper->velocity = velocity;
+  float clipped_velocity = velocity;
+  if (clipped_velocity < 0.0f) {
+    clipped_velocity = 0.0f;
+  }
+
+  const float max_velocity = STEPPER_MAX_STEP_RATE / STEPPER_TICK_HZ;
+  if (clipped_velocity > max_velocity) {
+    clipped_velocity = max_velocity;
+  }
+
+  stepper->velocity = clipped_velocity;
 }
 
 void Stepper_Process(Stepper *stepper) {
@@ -53,11 +63,18 @@ void Stepper_Process(Stepper *stepper) {
       stepper->current_pos--;
     }
 
-    for (volatile int d = 0; d < 10; d++) { __asm("nop"); }
+#if STEPPER_DIR_SETUP_US > 0
+    DWT_Delay_us(STEPPER_DIR_SETUP_US);
+#endif
 
     // Atomic Step Pulse
     stepper->step_port->BSRR = stepper->step_pin;
-    for (volatile int d = 0; d < 40; d++) { __asm("nop"); }
+#if STEPPER_STEP_PULSE_US > 0
+    DWT_Delay_us(STEPPER_STEP_PULSE_US);
+#endif
     stepper->step_port->BSRR = (uint32_t) stepper->step_pin << 16;
+#if STEPPER_STEP_LOW_US > 0
+    DWT_Delay_us(STEPPER_STEP_LOW_US);
+#endif
   }
 }

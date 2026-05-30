@@ -14,6 +14,7 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern float x_out, y_out;
+extern int32_t a_pos, b_pos, c_pos;
 
 static bool is_first_update = true;
 volatile float times;
@@ -80,6 +81,14 @@ static void prv_move(const float nx, const float ny) {
     */
     const float dist = (float) abs(new_target - s->current_pos);
     const float velocity = dist / 200.0f; // 200.0f is MUSCLE_FREQ / HEARTBEAT_FREQ
+
+    if (i == 0) {
+      a_pos = new_target;
+    } else if (i == 1) {
+      b_pos = new_target;
+    } else if (i == 2) {
+      c_pos = new_target;
+    }
 
     Stepper_MoveTo(s, new_target, velocity);
   }

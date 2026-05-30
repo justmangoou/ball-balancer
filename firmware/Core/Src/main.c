@@ -61,6 +61,7 @@ volatile float x_parc, y_parc;
 volatile uint16_t pressure;
 
 volatile float x_out, y_out;
+volatile int32_t a_pos, b_pos, c_pos;
 #endif
 
 volatile bool err_occurred = false;
@@ -134,7 +135,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    printf("x_parc: %.3f | y_parc: %.3f | x_out: %.3f | y_out: %.3f\n", x_parc, y_parc, x_out, y_out);
+    printf("x_parc: %.3f | y_parc: %.3f | x_out: %.3f | y_out: %.3f | a_pos: %d | b_pos: %d | c_pos: %d \n", x_parc, y_parc, x_out, y_out, a_pos, b_pos, c_pos);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

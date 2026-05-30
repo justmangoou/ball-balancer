@@ -5,6 +5,11 @@
 
 #define ANGLE_TO_STEP    (3200.0f / 360.0f)
 #define STEP_BUFFER_SIZE 16
+#define STEPPER_TICK_HZ  40000.0f // Must match TIM9 update frequency.
+#define STEPPER_MAX_STEP_RATE 20000.0f
+#define STEPPER_DIR_SETUP_US  2u
+#define STEPPER_STEP_PULSE_US 2u
+#define STEPPER_STEP_LOW_US   2u
 
 typedef struct {
     GPIO_TypeDef*      step_port;
