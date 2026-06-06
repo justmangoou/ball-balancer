@@ -29,6 +29,7 @@ Stepper *Stepper_New(GPIO_TypeDef *step_port, uint16_t step_pin, GPIO_TypeDef *d
 
 void Stepper_MoveTo(Stepper *stepper, const int32_t target_pos, const float velocity) {
   stepper->target_pos = target_pos;
+
   float clipped_velocity = velocity;
   if (clipped_velocity < 0.0f) {
     clipped_velocity = 0.0f;
@@ -51,7 +52,7 @@ void Stepper_Process(Stepper *stepper) {
   stepper->accumulator += stepper->velocity;
 
   // Process all complete steps that have accumulated
-  while (stepper->accumulator >= 1.0f && stepper->current_pos != stepper->target_pos) {
+  if (stepper->accumulator >= 1.0f && stepper->current_pos != stepper->target_pos) {
     stepper->accumulator -= 1.0f;
 
     // Set Direction

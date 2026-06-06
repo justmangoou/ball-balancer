@@ -6,15 +6,15 @@
 #include "main.h"
 #include "math_extra.h"
 
-static PID_Controller X_CONTROLLER = {25E-4f, 2E-6f, 1E-4f};
-static PID_Controller Y_CONTROLLER = {25E-4f, 2E-6f, 1E-4f};
+static PID_Controller X_CONTROLLER = {25E-4f, 0.0f, 0.0f};
+static PID_Controller Y_CONTROLLER = {25E-4f, 0.0f, 0.0f};
 Stepper* LEG_STEPPER_CONTROLLER[3] = { NULL };
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern float x_out, y_out;
-extern int32_t a_pos, b_pos, c_pos;
+extern float a_theta, b_theta, c_theta;
 
 static bool is_first_update = true;
 volatile float times;
@@ -41,7 +41,7 @@ void Controller_Init(void) {
 }
 
 void Controller_Test(void) {
-  Stepper_MoveTo(LEG_STEPPER_CONTROLLER[LEG_A], 200, 0.025f);
+  Stepper_MoveTo(LEG_STEPPER_CONTROLLER[LEG_B], LEG_STEPPER_CONTROLLER[LEG_B]->current_pos + 50, 0.025f);
 }
 
 void Controller_Update(Touch_CenterOffsetPercentage *offset) {
@@ -54,16 +54,19 @@ void Controller_Update(Touch_CenterOffsetPercentage *offset) {
   x_out = prv_pid_compute(&X_CONTROLLER, 0, offset->x, HEARTBEAT_DELTA_TIME);
   y_out = prv_pid_compute(&Y_CONTROLLER, 0, offset->y, HEARTBEAT_DELTA_TIME);
 
-  x_out = clampf(x_out, -0.25f, 0.25f);
-  y_out = clampf(y_out, -0.25f, 0.25f);
+  x_out = clampf(x_out, -0.2f, 0.2f);
+  y_out = clampf(y_out, -0.2f, 0.2f);
 
-  prv_move(-x_out, -y_out);
+  prv_move(y_out, -x_out);
 }
 
 void Controller_Reset(void) {
   prv_pid_reset(&X_CONTROLLER);
   prv_pid_reset(&Y_CONTROLLER);
   is_first_update = true;
+
+  x_out = 0.0f;
+  y_out = 0.0f;
 
   prv_move(0, 0);
 }
@@ -72,23 +75,25 @@ static void prv_move(const float nx, const float ny) {
   for (uint8_t i = 0; i < LEG_COUNT; i++) {
     Stepper *s = LEG_STEPPER_CONTROLLER[i];
 
-    const int32_t new_target = lroundf((ORIGIN_ANGLE - prv_theta_compute(i, 57.74f, nx, ny)) * ANGLE_TO_STEP);
+    const float theta = prv_theta_compute(i, 51.3f, nx, ny);
+
+    if (i == 0) {
+      a_theta = theta;
+    } else if (i == 1) {
+      b_theta = theta;
+    } else if (i == 2) {
+      c_theta = theta;
+    }
+
+    const int32_t new_target = lroundf((ORIGIN_ANGLE - theta) * ANGLE_TO_STEP);
 
     /* VELOCITY CALCULATION (Bresenham/Accumulator)
        We want to reach the new target within 1 Heartbeat (5ms).
        If Muscle Timer is 40kHz, we have 200 ticks per Heartbeat.
        Velocity = Distance / Ticks
     */
-    const float dist = (float) abs(new_target - s->current_pos);
-    const float velocity = dist / 200.0f; // 200.0f is MUSCLE_FREQ / HEARTBEAT_FREQ
-
-    if (i == 0) {
-      a_pos = new_target;
-    } else if (i == 1) {
-      b_pos = new_target;
-    } else if (i == 2) {
-      c_pos = new_target;
-    }
+    const float dist = (float)abs(new_target - s->current_pos);
+    const float velocity = dist / 200.0f;
 
     Stepper_MoveTo(s, new_target, velocity);
   }

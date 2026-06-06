@@ -4,8 +4,7 @@
 #include "stepper_driver.h"
 #include "resistive_touch.h"
 
-
-#define ORIGIN_ANGLE       206.662752199f
+#define ORIGIN_ANGLE       300.0f
 #define LEG_COUNT          3
 
 #define BASE_RADIUS        50.0f
@@ -34,9 +33,9 @@ typedef struct {
 } LegInfo;
 
 static const LegInfo LEGS[3] = {
-    {0.000000000f,  1.00000000f,  0.000000000f}, // Leg A: 0 rad
-    {2.094395102f, -0.50000000f,  0.866025404f}, // Leg B: 2π/3
-    {4.188790205f, -0.50000000f, -0.866025404f}, // Leg C: 4π/3
+    {5.759586532f,  0.86602540f, -0.500000000f}, // Leg A: 330°
+    {3.665191429f, -0.86602540f, -0.500000000f}, // Leg B: 210°
+    {1.570796327f,  0.00000000f,  1.000000000f}, // Leg C: 90°
 };
 
 typedef struct {
