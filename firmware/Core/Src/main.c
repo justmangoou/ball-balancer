@@ -136,6 +136,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    // printf("x_raw: %d | y_raw: %d\n", x_raw, y_raw);
     printf("x_parc: %.3f | y_parc: %.3f | x_out: %.3f | y_out: %.3f | a_pos: %.3f | b_pos: %.3f | c_pos: %.3f \n", x_parc, y_parc, x_out, y_out, a_theta, b_theta, c_theta);
   }
   /* USER CODE END 3 */
