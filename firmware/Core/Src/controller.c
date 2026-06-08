@@ -6,8 +6,8 @@
 #include "main.h"
 #include "math_extra.h"
 
-static PID_Controller X_CONTROLLER = {10E-4f, 0.0f, 1E-6f};
-static PID_Controller Y_CONTROLLER = {10E-4f, 0.0f, 1E-6f};
+static PID_Controller X_CONTROLLER = {6E-4f, 6E-5f, 10E-6f};
+static PID_Controller Y_CONTROLLER = {6E-4f, 6E-5f, 10E-6f};
 Stepper* LEG_STEPPER_CONTROLLER[3] = { NULL };
 
 extern TIM_HandleTypeDef htim2;
@@ -106,7 +106,7 @@ static float prv_pid_compute(PID_Controller *pid, const float setpoint, const fl
   const float kd = pid->kd;
 
   pid->integral += (error + pid->prev_error) * 0.5f * dt;
-  const float max_i = 0.05f / (ki > 0 ? ki : 1.0f);
+  const float max_i = 0.036f / (ki > 0 ? ki : 1.0f);
   pid->integral = clampf(pid->integral, -max_i, max_i);
 
   const float raw_derivative = (error - pid->prev_error) / dt;
