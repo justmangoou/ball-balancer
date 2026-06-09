@@ -6,11 +6,29 @@ This project is heavily inspired by and built upon the open-source work of **Aae
 
 Python scripts to log data and tune the PID controller are generated using Claude Sonnet 4.6.
 
+# BOM
+| ID | Name  | Quantity | Description |
+| --- | --- | --- | --- |
+| STM32F411CEU6 | STM32 BlackPill | 1 | Microcontroller |
+|  | Resistive Touch Panel | 1 | 4 Pins  |
+| 17HS4401S | Stepper 42x42mm | 3 | 1.5 - 2A |
+| TMC2208 | Stepper Driver | 3 |  |
+| LM2596 | Voltage Regulator | 1 | 4 - 35 VDC Input, 1 - 35 VDC Ouput (3A)  |
+|  | Capacitor | 3 | 35V - 220uF |
+|  | 24V power supply  | 1 | 24V - 5A |
+|  | Terminal Connector | 1 | 15A - 12 Ports |
+|  | FPC/FFC to DIP Adapter Board | 1 | 4 Pins |
+|  | DC Jack | 1 |  |
+|  | USB to TTL | 1 | |
+|  | Male and female header pin | many |  |
+
+
 ### PID Tuning Tracker
 | Times | Time | Kp | Ki | Kd | 
 | :---: | :---: | :---: | :---: | :---: |
-| **1** | [2026-06-08_10-17-07](logs/2026-06-08_10-17-07.csv) | `6E-4f` | `1E-6f` | `10E-6f` |
-| **2** | [2026-06-08_10-28-15](logs/2026-06-08_10-28-15.csv) | `6E-4f` | `4E-6f` | `10E-6f` |
-| **3** | [2026-06-08_10-33-42](logs/2026-06-08_10-33-42.csv) | `6E-4f` | `2E-5f` | `10E-6f` |
-| **4** | [2026-06-08_10-38-23](logs/2026-06-08_10-38-23.csv) | `6E-4f` | `6E-5f` | `10E-6f` |
-| **5** | [2026-06-08_10-41-10](logs/2026-06-08_10-41-10.csv) | `6E-4f` | `6E-5f` | `10E-6f` |
+| **1** | [2026-06-09_14-49-30](logs/2026-06-09_14-49-30.csv) | `6E-4f` | `6E-5f` | `10E-6f` |
+| **2** | [2026-06-09_16-08-42](logs/2026-06-09_16-08-42.csv) | `1.3E-3f` | `7E-5f` | `2.3E-5f` |
+| **3** | [2026-06-09_16-36-50](logs/2026-06-09_16-36-50.csv) | `1.1E-3f` | `5E-5f` | `2.3E-5f` |
+| **4** | [2026-06-09_16-38-50](logs/2026-06-09_16-38-50.csv) | `1.1E-3f` | `5E-5f` (x) / `7E-5f` (y) | `2.3E-5f` |
+| **5** | [2026-06-09_16-54-01](logs/2026-06-09_16-54-01.csv) | `1.1E-3f` | `5.5E-5f` (x) / `7.5E-5f` (y) | `2.3E-5f` |
+| **6** | [2026-06-09_16-58-05](logs/2026-06-09_16-58-05.csv) | `1.1E-3f` | `6E-5f` (x) / `7.5E-5f` (y) | `2.3E-5f` |

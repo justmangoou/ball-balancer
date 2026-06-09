@@ -46,7 +46,7 @@ extern Stepper* LEG_STEPPER_CONTROLLER[];
 
 #ifndef NDEBUG
 extern volatile uint16_t x_raw, y_raw;
-extern volatile float x_parc, y_parc;
+extern volatile float x_pos, y_pos;
 extern volatile uint16_t pressure;
 #endif
 
@@ -257,8 +257,8 @@ void TIM5_IRQHandler(void)
   #ifndef NDEBUG
   x_raw = raw_point.x;
   y_raw = raw_point.y;
-  x_parc = ball_offset.x;
-  y_parc = ball_offset.y;
+  x_pos = ball_offset.x;
+  y_pos = ball_offset.y;
   pressure = raw_point.z;
   #endif
 

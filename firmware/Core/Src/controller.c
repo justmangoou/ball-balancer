@@ -6,8 +6,8 @@
 #include "main.h"
 #include "math_extra.h"
 
-static PID_Controller X_CONTROLLER = {6E-4f, 6E-5f, 10E-6f};
-static PID_Controller Y_CONTROLLER = {6E-4f, 6E-5f, 10E-6f};
+static PID_Controller X_CONTROLLER = {1.1E-3f, 6E-5f, 2.3E-5f};
+static PID_Controller Y_CONTROLLER = {1.1E-3f, 7.5E-5f, 2.3E-5f};
 Stepper* LEG_STEPPER_CONTROLLER[3] = { NULL };
 
 extern TIM_HandleTypeDef htim2;

@@ -57,7 +57,7 @@ static uint32_t last_tick;
 
 #ifndef NDEBUG
 volatile uint16_t x_raw, y_raw;
-volatile float x_parc, y_parc;
+volatile float x_pos, y_pos;
 volatile uint16_t pressure;
 
 volatile float x_out, y_out;
@@ -136,8 +136,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    // printf("x_raw: %d | y_raw: %d\n", x_raw, y_raw);
-    printf("x_parc: %.3f | y_parc: %.3f | x_out: %.3f | y_out: %.3f | a_pos: %.3f | b_pos: %.3f | c_pos: %.3f \n", x_parc, y_parc, x_out, y_out, a_theta, b_theta, c_theta);
+    const float x_err = 0 - x_pos, y_err = 0 - y_pos;
+    //printf("x_raw: %d | y_raw: %d | z: %d | x_pos: %.2f | y_pos: %.2f \n", x_raw, y_raw, pressure, x_pos, y_pos);
+    printf("x_err: %.3f | y_err: %.3f | x_out: %.3f | y_out: %.3f | a_theta: %.3f | b_theta: %.3f | c_theta: %.3f \n", x_err, y_err, x_out, y_out, a_theta, b_theta, c_theta);
   }
   /* USER CODE END 3 */
 }
@@ -260,7 +261,7 @@ static void MX_TIM5_Init(void)
   htim5.Instance = TIM5;
   htim5.Init.Prescaler = 99;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 9999;
+  htim5.Init.Period = 4999;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
