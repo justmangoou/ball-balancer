@@ -12,5 +12,7 @@
 #let Z_MIN = 10
 #let Z_MAX = 4000
 
+#let P_ORIGIN = 300.0
+
 #let MISS_THRESHOLD = 20
 #let PID_OUTPUT_LIMIT = 0.25

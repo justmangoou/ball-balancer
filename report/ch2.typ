@@ -24,15 +24,10 @@
             caption: [Cấu tạo của màn cảm ứng điện trở],
         )
 
-    // TODO: fix this
-    == Cơ sở lý thuyết động cơ bước
-        Động cơ bước (stepper) chuyển động theo các bước rời rạc; mỗi xung bước tạo một bước góc xác định. Bằng cách thay đổi tần số xung bước ta điều khiển vận tốc, còn số xung tích lũy quyết định vị trí. Microstepping chia mỗi bước cơ bản thành nhiều bước nhỏ hơn bằng cách điều chỉnh dòng trên các cuộn dây, giúp tăng độ mịn và giảm rung.
+    == Cơ sở phát xung động cơ bước <stepper_control>
+        Động cơ bước được điều khiển thông qua hai tín hiệu STEP và DIR. Mỗi xung STEP tương ứng với một bước dịch chuyển của động cơ, trong khi tín hiệu DIR xác định chiều quay.
 
-    == Driver điều khiển
-        Driver nhận tín hiệu điều khiển từ bộ điều khiển (chẳng hạn `STEP`, `DIR`, `ENABLE`) và cấp/dừng dòng cho cuộn dây động cơ theo trình tự phù hợp. Các driver phổ biến như A4988 hoặc DRV8825 hỗ trợ cài đặt microstepping và giới hạn dòng (current limit) để bảo vệ động cơ. Khi tích hợp, cần cấu hình giới hạn dòng, nối các chân điều khiển, và đảm bảo nguồn cùng tản nhiệt đủ để tránh quá nhiệt.
-
-    == Phương pháp điều khiển
-        Phương pháp điều khiển đơn giản nhất là gửi xung bước và thiết lập chân hướng (`DIR`) để đổi chiều quay; tốc độ được điều khiển bằng tần số xung, vị trí bằng số xung. Với microstepping, cấu hình các chân chế độ bước trên driver hoặc qua giao tiếp phù hợp. Ngoài ra, hệ thống có thể kết hợp phản hồi (encoder, cảm biến vị trí) và thuật toán điều khiển (ví dụ điều khiển đóng vòng) để cải thiện độ chính xác và độ ổn định.
+        Trong hệ thống này, vận tốc được biểu diễn dưới dạng số thực và được tích lũy theo từng chu kỳ timer. Khi giá trị tích lũy đạt ngưỡng xác định, hệ thống phát một xung STEP và cập nhật vị trí hiện tại của động cơ. Phương pháp này cho phép điều khiển vận tốc mượt mà trong khi vẫn duy trì chu kỳ timer cố định.
 
     == Thuật toán điều khiển PID <pid_control_algorithm>
         Thuật toán điều khiển Proportional–Integral–Derivative (PID) là một phương pháp điều khiển phản hồi được sử dụng phổ biến trong các hệ thống. Trong đó tín hiệu điều khiển được xác định dựa trên sai lệch giữa giá trị đặt và giá trị đo được của hệ thống. Cách tiếp cận này cho phép hệ thống liên tục điều chỉnh để đạt được trạng thái mong muốn.

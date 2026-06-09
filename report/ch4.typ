@@ -1,4 +1,4 @@
-#import "constants.typ": HEARTBEAT_TIMER, HEARTBEAT_INTERVAL,  HEARTBEAT_INTERVAL_MS, HEARTBEAT_FREQUENCY, HEARTBEAT_FREQUENCY_KHZ, ACTUATOR_FREQUENCY_KHZ, ACTUATOR_FREQUENCY, ACTUATOR_FREQUENCY_KHZ, MISS_THRESHOLD, PID_OUTPUT_LIMIT, Z_MIN, Z_MAX, XY_SATURATION
+#import "constants.typ": HEARTBEAT_TIMER, HEARTBEAT_INTERVAL,  HEARTBEAT_INTERVAL_MS, HEARTBEAT_FREQUENCY, HEARTBEAT_FREQUENCY_KHZ, ACTUATOR_FREQUENCY_KHZ, ACTUATOR_FREQUENCY, ACTUATOR_FREQUENCY_KHZ, MISS_THRESHOLD, PID_OUTPUT_LIMIT, Z_MIN, Z_MAX, XY_SATURATION, P_ORIGIN
 
 = Thuật toán điều khiển
     == Xử lý tín hiệu cảm biến của màn cảm ứng điện trở
@@ -121,6 +121,9 @@
 
         $ p_"target" = theta_"origin" - theta $
 
+        trong đó:
+        - $theta_"origin"$ là góc gốc của cơ cấu chấp hành khi mặt phẳng nằm ngang (thực nghiệm cho kết quả khoảng $#P_ORIGIN degree$).
+
         Để đảm bảo cơ cấu chấp hành đạt vị trí mục tiêu trong một chu kỳ điều khiển, vận tốc được tính dựa trên khoảng cách giữa vị trí hiện tại và vị trí mục tiêu:
 
         $ v = (|p_"target" - p_"current"|)/N $
@@ -136,29 +139,10 @@
         Các giá trị vị trí mục tiêu và vận tốc sau đó được cập nhật vào bộ điều khiển động cơ bước để thực hiện nội suy chuyển động liên tục giữa các chu kỳ điều khiển.
 
     == Điều khiển cơ cấu chấp hành
-        // Sau khi tính được $\theta$ cho từng chân, hệ thống chuyển đổi sang vị trí mục tiêu của động cơ và phát xung điều khiển qua driver. Toàn bộ phần phát xung được tách khỏi vòng PID để đảm bảo thời gian thực.
+        Sau khi tính được góc nghiêng mong muốn, dựa trên lý thuyết tại @stepper_control, hệ thống chuyển đổi sang vị trí mục tiêu của từng động cơ bước. Việc phát xung STEP và xác định chiều quay DIR được thực hiện trong ngắt timer tần số #ACTUATOR_FREQUENCY nhằm đảm bảo tín hiệu điều khiển ổn định và đáp ứng yêu cầu thời gian thực.
 
-        // === Hai tầng thời gian: Heartbeat và Muscle
-        //     Firmware dùng 2 timer chính:
-        //     - *TIM5 (Heartbeat, $1\,kHz$)*: đọc cảm biến, tính PID, cập nhật mục tiêu cho từng động cơ.
-        //     - *TIM9 (Muscle, tần số cao)*: phát xung STEP/DIR theo mục tiêu hiện tại.
+        Hệ thống sử dụng chế độ vi bước 1/16, tương ứng với độ phân giải dịch chuyển nhỏ hơn 0.1 mm tại đầu ra cơ cấu chấp hành, giúp tăng độ mượt và độ chính xác khi điều khiển mặt phẳng.
 
-        // Cách tách này giúp phần tính toán (ADC, PID, động học) không làm “giật” xung điều khiển động cơ.
+        Đối với mỗi động cơ, hệ thống lưu trữ vị trí hiện tại và vị trí mục tiêu. Từ sai lệch vị trí, một giá trị vận tốc được tính toán và giới hạn trong phạm vi cho phép để tránh vượt quá tần số phát xung tối đa. Trong mỗi chu kỳ timer, giá trị vận tốc được cộng vào một biến tích lũy. Khi giá trị tích lũy đạt ngưỡng 1, hệ thống phát một xung STEP, cập nhật tín hiệu DIR tương ứng và thay đổi vị trí hiện tại của động cơ.
 
-        // === Lập kế hoạch bước và vận tốc
-        //     Với mỗi chân, đặt vị trí mục tiêu mới (new\_target) dựa trên góc gốc ORIGIN\_ANGLE và góc cần đạt $\theta$. Từ sai lệch vị trí:
-        //     $ dist = |target - current| $
-
-        //     vận tốc được chọn để hoàn thành trong 1 chu kỳ heartbeat. Ví dụ nếu TIM9 chạy $40\,kHz$ thì trong $1\,ms$ có 40 “tick”, và:
-        //     $ v = dist / 40 $
-
-        //     Trong driver, vận tốc được giới hạn để tránh phát xung quá dày.
-
-        // === Phát xung STEP/DIR bằng bộ tích luỹ
-        //     Trong mỗi tick TIM9, driver dùng cơ chế “bucket/accumulator” (tương tự Bresenham):
-        //     - Cộng $v$ vào biến tích luỹ.
-        //     - Khi tích luỹ $\ge 1$, phát đúng *1 xung STEP* và tăng/giảm current theo hướng DIR.
-
-        //     Việc đặt DIR và phát STEP sử dụng thanh ghi BSRR để set/reset chân GPIO một cách nguyên tử, đồng thời đảm bảo độ rộng xung đủ lớn bằng một vòng lặp NOP ngắn.
-
-        // Nhờ cách phát xung này, hệ thống có thể thay đổi mục tiêu mỗi $1\,ms$ nhưng vẫn giữ xung STEP đều và ổn định ở tần số cao.
+        Khi động cơ đạt vị trí mục tiêu, quá trình tích lũy được dừng và không phát thêm xung điều khiển. Phương pháp này cho phép điều khiển vận tốc dưới dạng số thực, tạo chuyển động mượt mà trong khi vẫn duy trì độ chính xác vị trí và tính ổn định của hệ thống.

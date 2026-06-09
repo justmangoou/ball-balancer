@@ -255,18 +255,30 @@
                     [],
                     )
                 )
-        // TODO: make this pro
         === Sơ đồ nối mạch
             Sơ đồ nối mạch thể hiện cách liên kết tổng thể giữa các thành phần chính trong hệ thống, bao gồm vi điều khiển, cảm biến, driver động cơ và nguồn cấp. Sơ đồ này giúp minh họa trực quan cấu trúc phần cứng và luồng kết nối giữa các khối chức năng.
-
-            #v(0.7em)
 
             #figure(
                 image("assets/board.png", width: 75%),
                 caption: [Sơ đồ kết nối tổng thể giữa vi điều khiển, driver động cơ và các khối chức năng],
             )
-            #pagebreak()
 
+            #v(0.7em)
+
+            Một số kết nối phụ trợ được lược bỏ để đơn giản hóa sơ đồ:
+
+            #v(-1em)
+
+            #figure(
+                image("assets/st-link.png", width: 35%),
+                caption: [Mạch nạp và gỡ lỗi ST-Link V2],
+            )
+
+            #figure(
+                image("assets/usb-to-ttl-com.png", width: 35%),
+                caption: [Mạch chuyển USB sang TTL/COM (UART)]
+            )
+            
         === Sơ đồ chân nối
             Bảng dưới đây trình bày chi tiết kết nối giữa các chân của linh kiện và chân của vi điều khiển, bao gồm cả cấu hình I/O tương ứng. 
 

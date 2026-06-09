@@ -37,7 +37,6 @@ t_rel = timestamps - timestamps[0]  # relative seconds from start
 print(f"Loaded {total} samples | duration: {t_rel[-1]:.1f}s | {CSV_PATH}")
 
 # ─── Plot Setup ───────────────────────────────────────────────────────────────
-plt.style.use("dark_background")
 fig, ax_err = plt.subplots(figsize=(14, 6))
 fig.subplots_adjust(left=0.07, right=0.86, top=0.88, bottom=0.18)
 fig.suptitle(f"Log Viewer — {CSV_PATH}", fontsize=11, fontweight="bold")
