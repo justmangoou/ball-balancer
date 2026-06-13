@@ -6,7 +6,7 @@
 #include "main.h"
 #include "math_extra.h"
 
-static PID_Controller X_CONTROLLER = {1.1E-3f, 6E-5f, 2.3E-5f};
+static PID_Controller X_CONTROLLER = {1.1E-3f, 7.5E-5f, 2.3E-5f};
 static PID_Controller Y_CONTROLLER = {1.1E-3f, 7.5E-5f, 2.3E-5f};
 Stepper* LEG_STEPPER_CONTROLLER[3] = { NULL };
 
@@ -57,7 +57,7 @@ void Controller_Update(Touch_CenterOffsetPercentage *offset) {
   x_out = clampf(x_out, -0.2f, 0.2f);
   y_out = clampf(y_out, -0.2f, 0.2f);
 
-  prv_move(y_out, -x_out);
+  prv_move(x_out, y_out);
 }
 
 void Controller_Reset(void) {
@@ -71,11 +71,15 @@ void Controller_Reset(void) {
   prv_move(0, 0);
 }
 
-static void prv_move(const float nx, const float ny) {
+static void prv_move(const float ux, const float uy) {
+  const float nx = uy;
+  const float ny = -ux;
+
   for (uint8_t i = 0; i < LEG_COUNT; i++) {
     Stepper *s = LEG_STEPPER_CONTROLLER[i];
 
     const float theta = prv_theta_compute(i, 51.3f, nx, ny);
+    const int32_t new_target = lroundf((ORIGIN_ANGLE - theta) * ANGLE_TO_STEP);
 
     if (i == 0) {
       a_theta = theta;
@@ -84,8 +88,6 @@ static void prv_move(const float nx, const float ny) {
     } else if (i == 2) {
       c_theta = theta;
     }
-
-    const int32_t new_target = lroundf((ORIGIN_ANGLE - theta) * ANGLE_TO_STEP);
 
     /* VELOCITY CALCULATION (Bresenham/Accumulator)
        We want to reach the new target within 1 Heartbeat (5ms).

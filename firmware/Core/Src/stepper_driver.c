@@ -1,6 +1,7 @@
 #include "stepper_driver.h"
 
 #include <stdlib.h>
+#include "math_extra.h"
 
 void Stepper_Enable(void) {
   HAL_GPIO_WritePin(LEG_ENABLE_GPIO_Port, LEG_ENABLE_Pin, GPIO_PIN_RESET);
@@ -21,61 +22,55 @@ Stepper *Stepper_New(GPIO_TypeDef *step_port, uint16_t step_pin, GPIO_TypeDef *d
 
   stepper->current_pos = 0;
   stepper->target_pos = 0;
-  stepper->velocity = 0.0f;
+  stepper->current_velocity = 0.0f;
+  stepper->target_velocity = 0.0f;
   stepper->accumulator = 0.0f;
 
   return stepper;
 }
 
 void Stepper_MoveTo(Stepper *stepper, const int32_t target_pos, const float velocity) {
-  stepper->target_pos = target_pos;
-
-  float clipped_velocity = velocity;
-  if (clipped_velocity < 0.0f) {
-    clipped_velocity = 0.0f;
-  }
-
   const float max_velocity = STEPPER_MAX_STEP_RATE / STEPPER_TICK_HZ;
-  if (clipped_velocity > max_velocity) {
-    clipped_velocity = max_velocity;
-  }
+  const float clipped_vel = clampf(velocity, 0.0f, max_velocity);
 
-  stepper->velocity = clipped_velocity;
+  stepper->target_pos = target_pos;
+  stepper->target_velocity = clipped_vel;
 }
 
 void Stepper_Process(Stepper *stepper) {
   if (stepper->current_pos == stepper->target_pos) {
-    stepper->accumulator = 0;
+    stepper->current_velocity = 0.0f;
+    stepper->target_velocity = 0.0f;
+    stepper->accumulator = 0.0f;
     return;
   }
 
-  stepper->accumulator += stepper->velocity;
+  const float error = stepper->target_velocity - stepper->current_velocity;
+  const float abs_err = (error > 0.0f) ? error : -error;
 
-  // Process all complete steps that have accumulated
-  if (stepper->accumulator >= 1.0f && stepper->current_pos != stepper->target_pos) {
+  if (abs_err <= STEPPER_ACCEL_RATE) {
+    stepper->current_velocity = stepper->target_velocity;
+  } else {
+    stepper->current_velocity += (error > 0.0f) ? STEPPER_ACCEL_RATE : -STEPPER_ACCEL_RATE;
+  }
+
+  stepper->accumulator += stepper->current_velocity;
+
+  while (stepper->accumulator >= 1.0f && stepper->current_pos != stepper->target_pos) {
     stepper->accumulator -= 1.0f;
 
-    // Set Direction
     if (stepper->target_pos > stepper->current_pos) {
       stepper->dir_port->BSRR = stepper->dir_pin;
       stepper->current_pos++;
     } else {
-      stepper->dir_port->BSRR = (uint32_t) stepper->dir_pin << 16;
+      stepper->dir_port->BSRR = (uint32_t)stepper->dir_pin << 16;
       stepper->current_pos--;
     }
 
-#if STEPPER_DIR_SETUP_US > 0
-    DWT_Delay_us(STEPPER_DIR_SETUP_US);
-#endif
-
-    // Atomic Step Pulse
+    DWT_Delay_us(2u);
     stepper->step_port->BSRR = stepper->step_pin;
-#if STEPPER_STEP_PULSE_US > 0
-    DWT_Delay_us(STEPPER_STEP_PULSE_US);
-#endif
-    stepper->step_port->BSRR = (uint32_t) stepper->step_pin << 16;
-#if STEPPER_STEP_LOW_US > 0
-    DWT_Delay_us(STEPPER_STEP_LOW_US);
-#endif
+    DWT_Delay_us(2u);
+    stepper->step_port->BSRR = (uint32_t)stepper->step_pin << 16;
+    DWT_Delay_us(2u);
   }
 }

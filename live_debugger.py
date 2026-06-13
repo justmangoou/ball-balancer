@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import serial
 
 # ─── Configurations ───────────────────────────────────────────────────────────
-SERIAL_PORT = "/dev/cu.usbserial-110"
+SERIAL_PORT = "/dev/cu.usbserial-1110"
 BAUD_RATE = 115200
 PLOT_INTERVAL = 0.1  # Minimum seconds between redraws (10 FPS cap)
 TRAIL_LEN = 2000  # How many historical points to keep on each plot

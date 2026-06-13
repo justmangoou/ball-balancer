@@ -27,16 +27,16 @@
                 fill: (x, y) => if y == 0 { gray.lighten(80%) },
 
                 [*Đặc tính*], [*Trục X*], [*Trục Y*],
-                [Sai số cực đại], 
-                [82.761 mm], [28.786 mm],
-                [Sai số cực tiểu],
-                [-78.366 mm], [-20.643 mm],
+                [Độ lệch cực trị dương], 
+                [82.761 %], [79.786 %],
+                [Độ lệch cực trị âm],
+                [-78.366 %], [-85.643 %],
                 [Biên độ xuất lực Max], 
                 [0.078], [0.030],
                 [Sai số xác lập trung bình], 
-                [2.138 mm], [2.937 mm],
+                [2.138 %], [2.937 %],
                 [Độ lệch chuẩn pha cuối], 
-                [2.506 mm], [2.498 mm],
+                [2.506 %], [2.498 %],
                 [Thời gian xác lập], 
                 [29.3 s], [35.6 s]
             ),
@@ -45,7 +45,7 @@
 
         Từ các số liệu trên, có thể rút ra một số nhận xét đặc tính của hệ thống như sau:
 
-        *a) Sai số xác lập:* Hệ thống đạt được sai số xác lập trung bình lần lượt là $2.138 "mm"$ (trục X) và $2.937 "mm"$ (trục Y), Kết quả này cho thấy bộ điều khiển có khả năng đưa quả bóng về gần vị trí mục tiêu, tuy nhiên sai số vẫn chưa được triệt tiêu hoàn toàn.
+        *a) Sai số xác lập:* Hệ thống đạt được sai số xác lập trung bình lần lượt là $2.138 "%"$ (trục X) và $2.937 "mm"$ (trục Y), Kết quả này cho thấy bộ điều khiển có khả năng đưa quả bóng về gần vị trí mục tiêu, tuy nhiên sai số vẫn chưa được triệt tiêu hoàn toàn.
 
         *b) Tính đối xứng giữa hai trục:* Độ lệch chuẩn ở trạng thái xác lập của hai trục gần như tương đương nhau ($2.506 "mm"$ và $2.498 "mm"$), cho thấy đáp ứng của hệ thống tương đối đồng nhất trên cả hai phương chuyển động.
 

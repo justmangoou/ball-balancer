@@ -7,9 +7,7 @@
 #define STEP_BUFFER_SIZE 16
 #define STEPPER_TICK_HZ  40000.0f // Must match TIM9 update frequency.
 #define STEPPER_MAX_STEP_RATE 2000.0f
-#define STEPPER_DIR_SETUP_US  2u
-#define STEPPER_STEP_PULSE_US 2u
-#define STEPPER_STEP_LOW_US   2u
+#define STEPPER_ACCEL_RATE 0.0005f
 
 typedef struct {
     GPIO_TypeDef*      step_port;
@@ -20,7 +18,8 @@ typedef struct {
     int32_t            current_pos;
     int32_t            target_pos;
 
-    volatile float     velocity;
+    volatile float     current_velocity;
+    volatile float     target_velocity;
     float              accumulator;
 } Stepper;
 
