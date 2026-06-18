@@ -6,6 +6,11 @@ This project is heavily inspired by and built upon the open-source work of **Aae
 
 Python scripts to log data and graph visualizer are generated using Claude Sonnet 4.6.
 
+## Major changes (compare to original work)
+- Use STM32F4 "Blackpill" instead of Teensy 4.1.
+- Use STM32 firmware development tools instead of Arduino (using Hardware timer, FPU, ...).
+- Re-design R-joint so it does not slip (mismatch step when working).
+
 ## Development
 ### Pre-requisites
 - Python 3.10 or higher (with `matplotlib`, `numpy` and `pyserial` libraries)
